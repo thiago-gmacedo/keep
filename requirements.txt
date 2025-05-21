@@ -1,2 +1,3 @@
 openai>=1.0.0
 pillow>=9.0.0
+gkeepapi==0.14.2  # Versão específica que funciona bem com o método login
