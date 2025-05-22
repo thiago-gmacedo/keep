@@ -52,8 +52,14 @@ def transcribe_handwriting(image_path: str) -> str:
                             "type": "text",
                             "text": (
                                 "Transcreva TODO o texto manuscrito presente na imagem abaixo. "
+                                "Não utilize formatação, apenas texto simples. "
+                                "Não utilize emojis, e seja bem observador ao observar o estado das tarefas, busque entender a intenção do texto."
+                                "Para representar o status de uma tarefa use os seguintes símbolos:"
+                                "[x] - tarefa concluída, [ ] - tarefa não concluída"
+                                "Se houver texto ilegível, escreva [ilegível]."
                                 "Mantenha a ordem das palavras e linhas; se algo estiver ilegível, escreva [ilegível]. "
-                                "Não acrescente comentários extras."
+                                "Não acrescente comentários extras."                                
+                                "Todo o conteúdo transcrito deve ser separado em 3 partes: Tarefas, notas e lembretes."
                             )
                         },
                         {
