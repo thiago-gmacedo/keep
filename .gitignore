@@ -1,14 +1,42 @@
+# Arquivos de configuração sensíveis
 .env
-venv
-image
+*.log
+
+# Ambientes virtuais
+venv/
+env/
+
+# Diretórios de dados processados
+images/
+image/
+obsidian_notes/**/*.md
+
+# Arquivos de controle
 .processed_notes.json
 .indexed_notes.json
+
+# Cache Python
 __pycache__/
-#Ignore md filees inside obsidian_notes folder
-obsidian_notes/**/*.md
+*.pyc
+*.pyo
+*.pyd
+.Python
 
 # Diretórios de banco de dados ChromaDB
 chroma_db/
 demo_chroma_db/
 test_db/
+
+# Diretórios de arquivo
+archive/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Sistema
+.DS_Store
+Thumbs.db
 

@@ -1,4 +1,10 @@
-# OCR de Notas Manuscritas - Guia de Configuração
+# OCR Keep → Obsidian + Vector DB - Guia de Configuração
+
+**Versão:** 1.0.0  
+**Data:** 29/05/2025  
+
+## Descrição
+Pipeline automatizado para processamento de notas manuscritas do Google Keep com OCR, estruturação via LLM, geração de arquivos Obsidian e indexação semântica no ChromaDB.
 
 ## Requisitos
 - Python 3.6 ou superior
