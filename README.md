@@ -1,7 +1,7 @@
 # OCR Keep → Obsidian + Vector DB
 
-**Versão:** 1.0.0  
-**Data:** 29/05/2025
+**Versão:** 2.0.0  
+**Data:** 30/05/2025
 
 Pipeline automatizado para processamento de notas manuscritas do Google Keep com OCR, estruturação via LLM, geração de arquivos Obsidian e indexação semântica no ChromaDB.
 
@@ -58,13 +58,14 @@ Veja o arquivo [CONFIG.md](CONFIG.md) para instruções detalhadas de configura�
 
 ### Estrutura do arquivo `.env/config`:
 ```env
+# Credenciais obrigatórias
 GOOGLE_EMAIL=seu.email@gmail.com
 GOOGLE_MASTER_TOKEN=seu_master_token_aqui
 OPENAI_API_KEY=sk-sua_chave_openai_aqui
 
-# Caminhos configuráveis (opcional)
-OBS_PATH=~/Documents/ObsidianVault
-CHROMA_DB_PATH=~/chroma_db
+# Caminhos configuráveis (opcional - o sistema cria automaticamente se não existirem)
+OBS_PATH=~/Documents/ObsidianVault    # Padrão: ./obsidian_notes
+CHROMA_DB_PATH=~/databases/chroma     # Padrão: ./chroma_db
 ```
 
 ## 🚀 Uso
@@ -137,23 +138,18 @@ O sistema foi adaptado para execução contínua em servidores pessoais com máx
 
 ### 🚀 Setup Rápido para Servidor
 
-1. **Clone e execute verificação:**
+1. **Clone e configure:**
 ```bash
 git clone <repository-url>
 cd keep
-./setup_check.sh
+cp .env/.env.example .env/config
+# Edite .env/config com suas credenciais
 ```
 
-2. **Configure credenciais no .env/config:**
+2. **Verificação automática:**
 ```bash
-# Credenciais obrigatórias
-GOOGLE_EMAIL=seu.email@gmail.com
-GOOGLE_MASTER_TOKEN=seu_master_token_aqui
-OPENAI_API_KEY=sk-sua_chave_openai_aqui
-
-# Caminhos opcionais (o sistema cria automaticamente se não existirem)
-OBS_PATH=~/Documents/ObsidianVault    # Padrão: ./obsidian_notes
-CHROMA_DB_PATH=~/databases/chroma     # Padrão: ./chroma_db
+chmod +x setup_check.sh
+./setup_check.sh
 ```
 
 3. **Iniciar execução agendada:**
@@ -190,18 +186,7 @@ tail -20 logs/pipeline.log
 
 ### 🔧 Personalização de Horários
 
-Para alterar os horários de execução, edite `run_loop.sh`:
-
-```bash
-# Horários atuais: 1h e 4h
-EXECUTION_HOURS="1 4"
-
-# Para executar a cada 6 horas (0h, 6h, 12h, 18h):
-EXECUTION_HOURS="0 6 12 18"
-
-# Para executar apenas às 2h da manhã:
-EXECUTION_HOURS="2"
-```
+Para alterar os horários de execução, edite a função `is_execution_time()` no arquivo `run_loop.sh`. Por padrão, executa às **01:00** e **04:00** diariamente.
 
 ## 🔍 Exemplo de Saída
 
