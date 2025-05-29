@@ -1,6 +1,7 @@
 # Arquivos de configuração sensíveis
-.env
+.env/
 *.log
+logs/
 
 # Ambientes virtuais
 venv/
@@ -10,6 +11,10 @@ env/
 images/
 image/
 obsidian_notes/**/*.md
+
+# ChromaDB - dados locais
+chroma_db/
+*/chroma_db/
 
 # Arquivos de controle
 .processed_notes.json
