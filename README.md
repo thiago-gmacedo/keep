@@ -15,6 +15,10 @@ Pipeline automatizado para processamento de notas manuscritas do Google Keep com
 - **Indexação semântica** no ChromaDB com embeddings multilingues
 - **Controle de duplicatas** com rastreamento de notas processadas
 - **Organização automática** de imagens processadas
+- **Execução agendada** para servidor com horários configuráveis
+- **Caminhos configuráveis** via .env para Obsidian e ChromaDB
+- **Sistema de logs** completo com timestamps e níveis
+- **Deploy universal** para qualquer servidor Linux/macOS
 
 ## 📋 Pré-requisitos
 
@@ -42,6 +46,12 @@ cp .env/.env.example .env/config
 # Edite .env/config com suas credenciais
 ```
 
+4. **Verificação automática de setup:**
+```bash
+chmod +x setup_check.sh
+./setup_check.sh
+```
+
 ## ⚙️ Configuração
 
 Veja o arquivo [CONFIG.md](CONFIG.md) para instruções detalhadas de configuração.
@@ -51,6 +61,10 @@ Veja o arquivo [CONFIG.md](CONFIG.md) para instruções detalhadas de configura�
 GOOGLE_EMAIL=seu.email@gmail.com
 GOOGLE_MASTER_TOKEN=seu_master_token_aqui
 OPENAI_API_KEY=sk-sua_chave_openai_aqui
+
+# Caminhos configuráveis (opcional)
+OBS_PATH=~/Documents/ObsidianVault
+CHROMA_DB_PATH=~/chroma_db
 ```
 
 ## 🚀 Uso
@@ -60,10 +74,21 @@ OPENAI_API_KEY=sk-sua_chave_openai_aqui
 python main.py
 ```
 
+### Executar com schedule de servidor (1h e 4h da manhã):
+```bash
+chmod +x run_loop.sh
+./run_loop.sh
+```
+
 ### Filtrar por label específica:
 ```bash
 python main.py "Anotações diárias"
 python main.py "OCR"
+```
+
+### Verificar configuração:
+```bash
+./setup_check.sh
 ```
 
 ### Ajuda:
@@ -77,14 +102,18 @@ python main.py --help
 keep/
 ├── main.py                 # Pipeline principal
 ├── ocr_extractor.py        # Funções Google Keep + OCR
+├── setup_check.sh          # Verificação automática de setup
+├── run_loop.sh             # Script execução agendada servidor
 ├── src/
 │   ├── obsidian_writer.py  # Geração arquivos Obsidian
 │   ├── chroma_indexer.py   # Indexação ChromaDB
 │   └── README_CHROMA.md    # Documentação ChromaDB
 ├── images/                 # Imagens baixadas
 │   └── processed/          # Imagens processadas
-├── obsidian_notes/         # Arquivos .md gerados
-├── chroma_db/              # Banco vetorial ChromaDB
+├── obsidian_notes/         # Arquivos .md gerados (configurável)
+├── chroma_db/              # Banco vetorial ChromaDB (configurável)
+├── logs/                   # Logs de execução
+│   └── pipeline.log        # Log principal do sistema
 ├── scripts/                # Scripts auxiliares
 ├── archive/                # Arquivos obsoletos
 └── .processed_notes.json   # Controle duplicatas
@@ -100,6 +129,79 @@ keep/
 6. **Gera** arquivos .md no formato Obsidian
 7. **Indexa** conteúdo no ChromaDB com embeddings
 8. **Move** imagens processadas para diretório organizado
+9. **Registra** todas operações em logs timestampados
+
+## 🖥️ Deploy em Servidor
+
+O sistema foi adaptado para execução contínua em servidores pessoais com máxima automação:
+
+### 🚀 Setup Rápido para Servidor
+
+1. **Clone e execute verificação:**
+```bash
+git clone <repository-url>
+cd keep
+./setup_check.sh
+```
+
+2. **Configure credenciais no .env/config:**
+```bash
+# Credenciais obrigatórias
+GOOGLE_EMAIL=seu.email@gmail.com
+GOOGLE_MASTER_TOKEN=seu_master_token_aqui
+OPENAI_API_KEY=sk-sua_chave_openai_aqui
+
+# Caminhos opcionais (o sistema cria automaticamente se não existirem)
+OBS_PATH=~/Documents/ObsidianVault    # Padrão: ./obsidian_notes
+CHROMA_DB_PATH=~/databases/chroma     # Padrão: ./chroma_db
+```
+
+3. **Iniciar execução agendada:**
+```bash
+chmod +x run_loop.sh
+./run_loop.sh
+```
+
+### ⏰ Execução Agendada
+
+O sistema executa automaticamente nos horários:
+- **01:00** - Processamento matinal
+- **04:00** - Processamento madrugada
+
+**Características:**
+- ✅ Previne execuções duplas no mesmo horário
+- ✅ Logs completos de todas operações
+- ✅ Cria diretórios automaticamente se não existirem
+- ✅ Fallback para caminhos padrão se configuração falhar
+- ✅ Suporte a caminhos com `~` (home directory)
+
+### 📋 Logs e Monitoramento
+
+```bash
+# Ver logs em tempo real
+tail -f logs/pipeline.log
+
+# Ver últimas execuções
+tail -20 logs/pipeline.log
+
+# Verificar status do sistema
+./setup_check.sh
+```
+
+### 🔧 Personalização de Horários
+
+Para alterar os horários de execução, edite `run_loop.sh`:
+
+```bash
+# Horários atuais: 1h e 4h
+EXECUTION_HOURS="1 4"
+
+# Para executar a cada 6 horas (0h, 6h, 12h, 18h):
+EXECUTION_HOURS="0 6 12 18"
+
+# Para executar apenas às 2h da manhã:
+EXECUTION_HOURS="2"
+```
 
 ## 🔍 Exemplo de Saída
 
@@ -168,7 +270,28 @@ O projeto indexa automaticamente todo conteúdo no ChromaDB, permitindo:
    - Verifique se label existe
    - Confirme notas têm anexos de imagem
 
+4. **Problemas de caminho/configuração:**
+   - Execute `./setup_check.sh` para diagnóstico completo
+   - Verifique logs em `logs/pipeline.log`
+   - Confirme permissões de escrita nos diretórios
+
+5. **Script não executa no servidor:**
+   - Verifique permissões: `chmod +x run_loop.sh setup_check.sh`
+   - Confirme que o arquivo `.env/config` existe
+   - Verifique logs para detalhes do erro
+
 ## 📝 Changelog
+
+### v2.0.0 (30/05/2025) - Deploy de Servidor
+- ✨ **Execução agendada** para servidores (1h e 4h da manhã)
+- ✨ **Caminhos configuráveis** via .env (OBS_PATH, CHROMA_DB_PATH)
+- ✨ **Sistema de logs** completo com timestamps e níveis
+- ✨ **Setup automático** com script de verificação
+- ✨ **Deploy universal** funciona em qualquer servidor Linux/macOS
+- ✨ **Criação automática** de diretórios se não existirem
+- ✨ **Suporte ~** (home directory) em caminhos
+- ✨ **Prevenção de execuções duplas** no mesmo horário
+- 🔧 **Segurança** com permissões 600 para arquivos de configuração
 
 ### v1.0.0 (29/05/2025)
 - Pipeline completo funcional
