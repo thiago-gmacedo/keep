@@ -11,6 +11,7 @@ env/
 images/
 image/
 obsidian_notes/**/*.md
+vault/
 
 # ChromaDB - dados locais
 chroma_db/
