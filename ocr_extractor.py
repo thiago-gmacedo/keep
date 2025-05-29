@@ -19,9 +19,20 @@ from pathlib import Path
 from PIL import Image
 from datetime import datetime, timezone
 
+# Importar ChromaIndexer para indexação semântica
+try:
+    from src.chroma_indexer import index_note_in_chroma
+    CHROMA_AVAILABLE = True
+except ImportError:
+    CHROMA_AVAILABLE = False
+    print("⚠️ Aviso: ChromaIndexer não encontrado. A indexação semântica não estará disponível.")
+
 MODEL_NAME = "gpt-4o"  # modelo atual com suporte a visão
 IMAGE_DIR = Path(__file__).parent / "image"  # Diretório para salvar imagens
 PROCESSED_NOTES_FILE = Path(__file__).parent / ".processed_notes.json"  # Arquivo para registro de notas processadas
+
+# Flag para controlar a indexação no ChromaDB
+ENABLE_CHROMA_INDEXING = True  # Por padrão, ativar indexação
 
 
 def convert_json_to_obsidian(json_data, output_folder="obsidian_notes"):
@@ -161,6 +172,14 @@ def process_single_image(img_path):
                 print("✅ Arquivo Obsidian gerado com sucesso!")
             else:
                 print("⚠️ Falha na conversão para Obsidian")
+            
+            # Indexar no ChromaDB para busca semântica
+            if CHROMA_AVAILABLE and ENABLE_CHROMA_INDEXING:
+                print("🔄 Indexando no ChromaDB para busca semântica...")
+                if index_note_in_chroma(json_data):
+                    print("✅ Nota indexada com sucesso no ChromaDB!")
+                else:
+                    print("⚠️ Falha na indexação no ChromaDB")
                 
         except json.JSONDecodeError:
             # Não é JSON válido, salvar como .txt
@@ -179,6 +198,16 @@ def main():
         img_path = Path(__file__).parent / "image" / "ink.png"
         print(f"🖼️ Modo Local: Usando imagem padrão: {img_path}")
         process_single_image(str(img_path))
+    elif len(sys.argv) == 2 and sys.argv[1] == "--help":
+        # Exibir ajuda
+        print("\n📋 Uso do OCR de Notas Manuscritas:")
+        print("  python ocr_extractor.py                     # Processar imagem padrão")
+        print("  python ocr_extractor.py imagem.png          # Processar imagem específica")
+        print("  python ocr_extractor.py MinhaLabel          # Processar notas do Google Keep com esta label")
+        print("\nOpções:")
+        print("  --no-index, --disable-indexing              # Desativar indexação no ChromaDB")
+        print("  --help                                      # Exibir esta ajuda")
+        sys.exit(0)
     elif len(sys.argv) == 2 and (Path(sys.argv[1]).is_file() or sys.argv[1].startswith("/")):
         # Modo local - imagem específica
         print(f"🖼️ Modo Local: Processando imagem específica: {sys.argv[1]}")
@@ -529,6 +558,14 @@ def process_keep_notes(label_name):
                                 print("✅ Arquivo Obsidian gerado com sucesso!")
                             else:
                                 print("⚠️ Falha na conversão para Obsidian")
+                            
+                            # Indexar no ChromaDB para busca semântica
+                            if CHROMA_AVAILABLE and ENABLE_CHROMA_INDEXING:
+                                print("🔄 Indexando no ChromaDB para busca semântica...")
+                                if index_note_in_chroma(json_data):
+                                    print("✅ Nota indexada com sucesso no ChromaDB!")
+                                else:
+                                    print("⚠️ Falha na indexação no ChromaDB")
                                 
                         except json.JSONDecodeError:
                             # Não é JSON válido, salvar como .txt
@@ -620,6 +657,25 @@ def is_note_processed(note_id, label_name):
             note_id in processed_notes[label_name])
 
 if __name__ == "__main__":
+    # Processar argumentos de linha de comando para opções
+    disable_indexing = False
+    
+    # Verificar opções nos argumentos
+    args_to_remove = []
+    for i, arg in enumerate(sys.argv):
+        if arg == "--no-index" or arg == "--disable-indexing":
+            disable_indexing = True
+            args_to_remove.append(i)
+    
+    # Remover argumentos de opção para não interferir com o processamento normal
+    for i in sorted(args_to_remove, reverse=True):
+        sys.argv.pop(i)
+    
+    # Desativar indexação se solicitado
+    if disable_indexing:
+        ENABLE_CHROMA_INDEXING = False
+        print("ℹ️ Indexação no ChromaDB desativada pelo argumento de linha de comando")
+    
     # Verificar API key para OpenAI
     api_key = os.environ.get("OPENAI_API_KEY") or load_api_key_from_env_file()
     
@@ -645,7 +701,7 @@ if __name__ == "__main__":
                     sys.exit("Operação cancelada pelo usuário.")
         
         # Exibir versão atual
-        versao = "0.7.0"
+        versao = "0.8.0"
         print(f"\n{'=' * 58}\n{'📝 OCR de Notas Manuscritas - Versão ' + versao:^58}\n{'=' * 58}")
         
         main()

@@ -1,4 +1,4 @@
-# 📝 OCR de Notas Manuscritas (Versão 0.7.0)
+# 📝 OCR de Notas Manuscritas (Versão 0.8.0)
 
 Ferramenta avançada para extrair e estruturar texto de imagens de notas manuscritas utilizando a API de visão OpenAI (GPT-4o). Esta versão oferece processamento local de imagens, integração completa com Google Keep, geração automática de JSON estruturado e exportação para Obsidian com YAML front-matter.
 
@@ -8,6 +8,7 @@ Ferramenta avançada para extrair e estruturar texto de imagens de notas manuscr
 - 📋 **Integração Google Keep**: Processa notas diretamente do Google Keep
 - 🗂️ **Estruturação Inteligente**: Converte texto em JSON estruturado com campos específicos
 - 📚 **Exportação Obsidian**: Gera arquivos Markdown com YAML front-matter compatíveis
+- 🧠 **Busca Semântica**: Indexação automática em ChromaDB para consultas por significado
 - 🏷️ **Sistema de Labels**: Filtra notas por etiquetas do Google Keep
 - 📅 **Filtros Avançados**: Processa notas de hoje, todas ou apenas não processadas
 - 🔄 **Controle de Processamento**: Evita reprocessar notas já analisadas
@@ -96,12 +97,24 @@ python ocr_extractor.py
 
 # Processar imagem específica
 python ocr_extractor.py caminho/para/sua/imagem.png
+
+# Processar sem indexar no ChromaDB
+python ocr_extractor.py --no-index caminho/para/sua/imagem.png
 ```
 
 ### 2. **Modo Google Keep - Processamento por Label**
 ```bash
 # Processar notas com uma label específica
 python ocr_extractor.py MinhaLabel
+
+# Processar notas sem indexar no ChromaDB
+python ocr_extractor.py --no-index MinhaLabel
+```
+
+### 3. **Busca Semântica com ChromaDB**
+```bash
+# Executar o script de exemplo para busca semântica
+python scripts/example_chroma_indexer.py
 ```
 
 **Opções de filtro disponíveis:**
@@ -212,6 +225,60 @@ Lista de tarefas diárias e nota sobre problema resolvido pela manhã.
 Quando o OCR não consegue estruturar em JSON, salva a transcrição em arquivo `.txt`.
 
 ## 🔧 Funcionalidades Avançadas
+
+### 🧠 Busca Semântica com ChromaDB
+- **Indexação Automática**: Cada nota é automaticamente indexada no ChromaDB
+- **Embeddings Multilíngue**: Usa modelo otimizado para português
+- **Consultas por Significado**: Encontra notas pelo contexto, não apenas palavras-chave
+- **Controle por Linha de Comando**: Opção `--no-index` para desativar indexação
+- **Metadados Enriquecidos**: Armazena informações estruturadas para filtragem avançada
+
+Para usar a busca semântica:
+```python
+# Exemplo de uso em Python
+from src.chroma_indexer import ChromaIndexer
+
+# Inicializar o ChromaIndexer
+indexer = ChromaIndexer()
+
+# Buscar notas relacionadas a "problema de mapeamento"
+resultados = indexer.search_similar_notes("problema de mapeamento", n_results=3)
+
+# Exibir resultados
+for i, res in enumerate(resultados, 1):
+    print(f"Resultado {i}:")
+    print(f"- Título: {res['metadata'].get('title', 'N/A')}")
+    print(f"- Similaridade: {res['similarity']:.4f}")
+    print(f"- Resumo: {res['metadata'].get('summary', 'N/A')}")
+```
+
+Exemplos de consultas semânticas:
+```python
+# Buscar notas relacionadas a trabalho
+resultados_trabalho = indexer.search_similar_notes("reuniões de trabalho e tarefas pendentes")
+
+# Buscar por tópicos de estudos
+resultados_estudo = indexer.search_similar_notes("material de estudo e cursos")
+
+# Buscar ideias ou conceitos específicos
+resultados_ideias = indexer.search_similar_notes("ideias para projeto de machine learning")
+
+# Buscar por datas aproximadas
+resultados_data = indexer.search_similar_notes("anotações do final de maio")
+
+# Filtragem por metadados e busca semântica
+resultados_filtrados = indexer.search_similar_notes(
+    "problema técnico", 
+    filter_criteria={"tag": "bug"},  # Filtrar por metadados específicos
+    n_results=5
+)
+```
+
+Você também pode executar o script de exemplo diretamente:
+```bash
+# Executar exemplo interativo de busca semântica
+python scripts/example_chroma_indexer.py
+```
 
 ### 🎯 Múltiplas Estratégias de Download
 O sistema utiliza 3 estratégias para baixar anexos do Google Keep:
@@ -339,7 +406,7 @@ Sua escolha [1/2/3]: 1
 ==================================================
 ```
 
-## 🏷️ Versão Atual: 0.7.0
+## 🏷️ Versão Atual: 0.8.0
 
 **Principais melhorias desta versão:**
 - ✅ Integração completa com Google Keep
@@ -350,6 +417,8 @@ Sua escolha [1/2/3]: 1
 - ✅ IDs únicos para organização e deduplicação
 - ✅ Suporte a múltiplos formatos de data
 - ✅ Tratamento de erros robusto
+- ✅ Indexação semântica com ChromaDB
+- ✅ Busca semântica de notas manuscritas
 
 ## 📞 Suporte
 
