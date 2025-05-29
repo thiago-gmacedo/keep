@@ -1,304 +1,558 @@
-# OCR Keep → Obsidian + Vector DB
+# 📝 OCR Keep → Obsidian + Vector DB
 
-**Versão:** 2.0.0  
-**Data:** 30/05/2025
+[![Python](https://img.shields.io/badge/Python-3.8%2B-blue)](https://python.org)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![OpenAI](https://img.shields.io/badge/OpenAI-GPT--4%20Vision-orange)](https://openai.com)
+[![ChromaDB](https://img.shields.io/badge/ChromaDB-Vector%20Database-purple)](https://chromadb.com)
 
-Pipeline automatizado para processamento de notas manuscritas do Google Keep com OCR, estruturação via LLM, geração de arquivos Obsidian e indexação semântica no ChromaDB.
+> **Transforme suas notas manuscritas em conhecimento digital estruturado**
 
-## 🚀 Funcionalidades
+Pipeline inteligente e automatizado que extrai, processa e indexa notas manuscritas do Google Keep, utilizando OCR avançado com GPT-4 Vision, estruturação semântica com LLMs, e armazenamento integrado em Obsidian (.md) + ChromaDB para busca semântica.
 
-- **Conexão automática** ao Google Keep via master token
-- **Filtragem inteligente** de notas de hoje por label/tag
-- **OCR avançado** usando GPT-4 Vision para texto manuscrito
-- **Estruturação LLM** do texto extraído em JSON padronizado
-- **Geração automática** de arquivos Markdown para Obsidian
-- **Indexação semântica** no ChromaDB com embeddings multilingues
-- **Controle de duplicatas** com rastreamento de notas processadas
-- **Organização automática** de imagens processadas
-- **Execução agendada** para servidor com horários configuráveis
-- **Caminhos configuráveis** via .env para Obsidian e ChromaDB
-- **Sistema de logs** completo com timestamps e níveis
-- **Deploy universal** para qualquer servidor Linux/macOS
+![Demo Placeholder](https://via.placeholder.com/800x400/2196F3/ffffff?text=🚀+Pipeline+OCR+Keep+→+Obsidian+%2B+ChromaDB)
 
-## 📋 Pré-requisitos
+## ✨ Visão Geral
 
-- Python 3.8+ 
-- Conta Google com Google Keep ativo
-- Chave API OpenAI (GPT-4 Vision)
-- Master token do Google Keep
+Este projeto resolve o problema de **digitalização inteligente de notas manuscritas**, oferecendo um pipeline completo que:
 
-## 🛠️ Instalação
+- 🔗 **Conecta automaticamente** ao Google Keep via master token
+- 🎯 **Filtra inteligentemente** notas por labels/tags e datas
+- 🤖 **OCR de alta precisão** usando GPT-4 Vision para manuscritos
+- 📊 **Estrutura semanticamente** o conteúdo com LLMs em JSON padronizado
+- 📝 **Gera arquivos Markdown** otimizados para Obsidian com frontmatter YAML
+- 🔍 **Indexa semanticamente** no ChromaDB com embeddings multilingues
+- 🔄 **Executa automaticamente** em horários programados (ideal para servidores)
+- 📁 **Organiza inteligentemente** arquivos processados e controla duplicatas
+- ⚙️ **Configuração flexível** via .env com caminhos personalizáveis
+- 📊 **Logs completos** com timestamps e monitoramento de status
 
-1. **Clone o repositório:**
+### 🎯 Casos de Uso
+
+- **📚 Pesquisadores**: Digitalize anotações de campo e literatura
+- **🎓 Estudantes**: Transforme notas de aula em material de estudo estruturado  
+- **💼 Profissionais**: Organize reuniões e brainstorming em conhecimento pesquisável
+- **✍️ Escritores**: Capture ideias manuscritas em sistema digital organizado
+- **🏠 Uso Pessoal**: Automatize organização de listas, lembretes e notas cotidianas
+
+## 🛠️ Tecnologias Utilizadas
+
+| Componente | Tecnologia | Função |
+|------------|------------|---------|
+| **OCR** | GPT-4 Vision | Extração de texto manuscrito |
+| **Backend** | Python 3.8+ | Pipeline principal |
+| **Keep API** | gkeepapi | Conexão com Google Keep |
+| **Vector DB** | ChromaDB | Busca semântica |
+| **Embeddings** | Sentence Transformers | Indexação multilíngue |
+| **Output** | Markdown + YAML | Compatibilidade Obsidian |
+| **Automação** | Bash Scripts | Execução agendada |
+
+## 📋 Requisitos
+
+### Obrigatórios
+- **Python 3.8+** (recomendado 3.10+)
+- **Conta Google** com Google Keep ativo
+- **OpenAI API Key** com acesso ao GPT-4 Vision
+- **Google Keep Master Token** ([como obter](CONFIG.md))
+
+### Sistema Operacional
+- ✅ Linux (testado no Ubuntu 20.04+)
+- ✅ macOS (testado no macOS 12+)
+- ⚠️ Windows (suporte via WSL)
+
+## ⚡ Instalação Rápida
+
+### 1️⃣ Clone e Configure o Ambiente
+
 ```bash
-git clone <repository-url>
-cd keep
-```
+# Clone o repositório
+git clone https://github.com/thiago-gmacedo/ocr-keep-obsidian.git
+cd ocr-keep-obsidian
 
-2. **Instale dependências:**
-```bash
+# Crie um ambiente virtual (recomendado)
+python -m venv venv
+source venv/bin/activate  # Linux/macOS
+# ou: venv\Scripts\activate  # Windows
+
+# Instale as dependências
 pip install -r requirements.txt
 ```
 
-3. **Configure credenciais:**
+### 2️⃣ Configure as Credenciais
+
 ```bash
-cp .env/.env.example .env/config
-# Edite .env/config com suas credenciais
+# Crie o arquivo de configuração
+mkdir -p .env
+cp CONFIG.md .env/  # Use como referência
+
+# Edite o arquivo de configuração
+nano .env/config  # ou seu editor preferido
 ```
 
-4. **Verificação automática de setup:**
-```bash
-chmod +x setup_check.sh
-./setup_check.sh
-```
-
-## ⚙️ Configuração
-
-Veja o arquivo [CONFIG.md](CONFIG.md) para instruções detalhadas de configuração.
-
-### Estrutura do arquivo `.env/config`:
+**Estrutura do `.env/config`:**
 ```env
-# Credenciais obrigatórias
+# 🔑 Credenciais obrigatórias
 GOOGLE_EMAIL=seu.email@gmail.com
 GOOGLE_MASTER_TOKEN=seu_master_token_aqui
 OPENAI_API_KEY=sk-sua_chave_openai_aqui
 
-# Caminhos configuráveis (opcional - o sistema cria automaticamente se não existirem)
+# 📁 Caminhos personalizados (opcional)
 OBS_PATH=~/Documents/ObsidianVault    # Padrão: ./obsidian_notes
 CHROMA_DB_PATH=~/databases/chroma     # Padrão: ./chroma_db
 ```
 
-## 🚀 Uso
+### 3️⃣ Verificação do Setup
 
-### Executar pipeline completo:
 ```bash
-python main.py
-```
+# Torne os scripts executáveis
+chmod +x setup_check.sh run_loop.sh
 
-### Executar com schedule de servidor (1h e 4h da manhã):
-```bash
-chmod +x run_loop.sh
-./run_loop.sh
-```
-
-### Filtrar por label específica:
-```bash
-python main.py "Anotações diárias"
-python main.py "OCR"
-```
-
-### Verificar configuração:
-```bash
+# Execute verificação automática
 ./setup_check.sh
 ```
 
-### Ajuda:
+✅ **Pronto!** Se a verificação passou, seu sistema está configurado corretamente.
+
+## 🚀 Como Usar
+
+### 📖 Comandos Principais
+
+| Comando | Descrição | Exemplo |
+|---------|-----------|---------|
+| `python src/main.py` | Executa pipeline completo | Processa todas as notas de hoje |
+| `python src/main.py "Label"` | Filtra por label específica | `python src/main.py "Anotações"` |
+| `./run_loop.sh` | Execução agendada (servidor) | Roda às 01:00 e 04:00 diariamente |
+| `./setup_check.sh` | Verificação do sistema | Diagnóstico completo |
+| `tail -f logs/pipeline.log` | Monitorar logs em tempo real | Ver execução atual |
+
+### 💻 Uso Básico
+
 ```bash
-python main.py --help
-```
+# Ative o ambiente virtual
+source venv/bin/activate
 
-## 📁 Estrutura do Projeto
+# Execute o pipeline uma vez
+python src/main.py
 
-```
-keep/
-├── main.py                 # Pipeline principal
-├── ocr_extractor.py        # Funções Google Keep + OCR
-├── setup_check.sh          # Verificação automática de setup
-├── run_loop.sh             # Script execução agendada servidor
-├── src/
-│   ├── obsidian_writer.py  # Geração arquivos Obsidian
-│   ├── chroma_indexer.py   # Indexação ChromaDB
-│   └── README_CHROMA.md    # Documentação ChromaDB
-├── images/                 # Imagens baixadas
-│   └── processed/          # Imagens processadas
-├── obsidian_notes/         # Arquivos .md gerados (configurável)
-├── chroma_db/              # Banco vetorial ChromaDB (configurável)
-├── logs/                   # Logs de execução
-│   └── pipeline.log        # Log principal do sistema
-├── scripts/                # Scripts auxiliares
-├── archive/                # Arquivos obsoletos
-└── .processed_notes.json   # Controle duplicatas
-```
+# Execute com filtro de label
+python src/main.py "Estudos"
 
-## 📊 Fluxo do Pipeline
-
-1. **Conecta** ao Google Keep usando master token
-2. **Busca** notas de hoje com imagens (filtradas por label)
-3. **Baixa** imagens das notas não processadas
-4. **Executa OCR** com GPT-4 Vision nas imagens
-5. **Estrutura** texto extraído em JSON via LLM
-6. **Gera** arquivos .md no formato Obsidian
-7. **Indexa** conteúdo no ChromaDB com embeddings
-8. **Move** imagens processadas para diretório organizado
-9. **Registra** todas operações em logs timestampados
-
-## 🖥️ Deploy em Servidor
-
-O sistema foi adaptado para execução contínua em servidores pessoais com máxima automação:
-
-### 🚀 Setup Rápido para Servidor
-
-1. **Clone e configure:**
-```bash
-git clone <repository-url>
-cd keep
-cp .env/.env.example .env/config
-# Edite .env/config com suas credenciais
-```
-
-2. **Verificação automática:**
-```bash
-chmod +x setup_check.sh
+# Verificar se tudo está funcionando
 ./setup_check.sh
 ```
 
-3. **Iniciar execução agendada:**
+### 🖥️ Uso em Servidor (Automático)
+
 ```bash
-chmod +x run_loop.sh
+# Inicie execução contínua (ideal para VPS/servidor)
 ./run_loop.sh
+
+# O sistema executará automaticamente às 01:00 e 04:00
+# Para parar: Ctrl+C ou kill do processo
 ```
 
-### ⏰ Execução Agendada
-
-O sistema executa automaticamente nos horários:
-- **01:00** - Processamento matinal
-- **04:00** - Processamento madrugada
-
-**Características:**
-- ✅ Previne execuções duplas no mesmo horário
-- ✅ Logs completos de todas operações
-- ✅ Cria diretórios automaticamente se não existirem
-- ✅ Fallback para caminhos padrão se configuração falhar
-- ✅ Suporte a caminhos com `~` (home directory)
-
-### 📋 Logs e Monitoramento
+### 📊 Monitoramento
 
 ```bash
 # Ver logs em tempo real
 tail -f logs/pipeline.log
 
-# Ver últimas execuções
+# Ver últimas 20 linhas do log
 tail -20 logs/pipeline.log
 
 # Verificar status do sistema
 ./setup_check.sh
+
+# Ver arquivos gerados
+ls -la obsidian_notes/
+ls -la chroma_db/
 ```
 
-### 🔧 Personalização de Horários
+## 📁 Estrutura do Projeto
 
-Para alterar os horários de execução, edite a função `is_execution_time()` no arquivo `run_loop.sh`. Por padrão, executa às **01:00** e **04:00** diariamente.
+```
+📦 ocr-keep-obsidian/
+├── 🚀 src/                          # Módulos principais
+│   ├── main.py                      # 🎯 Pipeline central
+│   ├── obsidian_writer.py           # 📝 Gerador Markdown/Obsidian
+│   ├── chroma_indexer.py            # 🔍 Indexador ChromaDB
+│   └── README_CHROMA.md             # 📖 Docs ChromaDB
+├── 🔧 scripts/                      # Scripts auxiliares
+│   ├── auto_indexer.py              # 🔄 Indexação automática
+│   └── test_chroma_indexer.py       # 🧪 Testes ChromaDB
+├── 📷 images/                       # Imagens baixadas
+│   └── processed/                   # ✅ Imagens processadas
+├── 📝 obsidian_notes/               # 📁 Arquivos .md gerados
+├── 🔍 chroma_db/                    # 💾 Banco vetorial
+├── 📊 logs/                         # 📋 Logs do sistema
+│   └── pipeline.log                 # 📄 Log principal
+├── ⚙️ .env/                         # 🔐 Configurações
+│   └── config                       # 🔑 Credenciais
+├── 🗃️ archive/                      # 📦 Arquivos legados
+├── 🔧 main.py                       # 🎯 Entry point alternativo
+├── 🔧 ocr_extractor.py              # 📷 Funções Keep + OCR
+├── 🔧 run_loop.sh                   # ⏰ Execução agendada
+├── 🔧 setup_check.sh                # ✅ Verificação setup
+├── 📋 requirements.txt              # 📦 Dependências Python
+├── 📖 README.md                     # 📚 Este arquivo
+├── ⚙️ CONFIG.md                     # 🔧 Guia configuração
+└── 📄 .processed_notes.json         # 🔄 Controle duplicatas
+```
 
-## 🔍 Exemplo de Saída
+### 📂 Diretórios Importantes
 
-### JSON Estruturado:
+| Diretório | Propósito | Configurável |
+|-----------|-----------|--------------|
+| `obsidian_notes/` | Arquivos .md gerados | ✅ via `OBS_PATH` |
+| `chroma_db/` | Banco vetorial ChromaDB | ✅ via `CHROMA_DB_PATH` |
+| `images/` | Imagens baixadas do Keep | ❌ Fixo |
+| `logs/` | Logs de execução | ❌ Fixo |
+
+## 🔄 Como Funciona o Pipeline
+
+```mermaid
+graph LR
+    A[📱 Google Keep] --> B[🔗 Master Token]
+    B --> C[📷 Download Images]
+    C --> D[🤖 GPT-4 Vision OCR]
+    D --> E[📊 LLM Structure]
+    E --> F[📝 Obsidian .md]
+    E --> G[🔍 ChromaDB Index]
+    F --> H[📁 Organized Files]
+    G --> H
+```
+
+### 🎯 Etapas Detalhadas
+
+1. **🔗 Conexão**: Autentica no Google Keep via master token
+2. **🎯 Filtragem**: Busca notas de hoje com imagens (opcionalmente por label)
+3. **📥 Download**: Baixa imagens das notas não processadas anteriormente
+4. **🤖 OCR**: Extrai texto manuscrito usando GPT-4 Vision
+5. **📊 Estruturação**: Organiza conteúdo em JSON padronizado via LLM
+6. **📝 Geração**: Cria arquivos .md compatíveis com Obsidian
+7. **🔍 Indexação**: Gera embeddings e indexa no ChromaDB
+8. **📁 Organização**: Move imagens para pasta `processed/`
+9. **📋 Controle**: Registra operação para evitar duplicatas futuras
+
+### 🎨 Exemplo de Transformação
+
+**📷 Input**: Imagem de nota manuscrita
+```
+✍️ "Reunião cliente X
+   - Discutir proposta
+   - Agendar follow-up
+   💡 Ideia: integração API"
+```
+
+**📊 JSON Estruturado**:
 ```json
 {
-  "title": "28/05/25 - Tarefas",
-  "data": "28/05/25",
-  "summary": "Lista de tarefas e anotações do dia",
-  "keywords": ["tarefas", "produtividade"],
+  "title": "Reunião Cliente X",
+  "data": "29/05/25",
+  "summary": "Reunião para discussão de proposta e follow-up",
+  "keywords": ["reunião", "cliente", "proposta", "API"],
   "tasks": [
-    {"task": "Revisar código", "status": "done"},
-    {"task": "Documentar projeto", "status": "todo"}
+    {"task": "Discutir proposta", "status": "done"},
+    {"task": "Agendar follow-up", "status": "todo"}
   ],
-  "notes": ["Manhã produtiva"],
+  "notes": ["Ideia: integração API"],
   "reminders": []
 }
 ```
 
-### Arquivo Obsidian (.md):
+**📝 Obsidian Output**:
 ```markdown
 ---
-title: "28/05/25 - Tarefas"
-created: "2025-05-28T00:00:00"
-summary: "Lista de tarefas e anotações do dia"
-keywords: ["tarefas", "produtividade"]
-vector_id: "abc123..."
+title: "Reunião Cliente X"
+created: "2025-05-29T00:00:00"
+summary: "Reunião para discussão de proposta e follow-up"
+keywords: ["reunião", "cliente", "proposta", "API"]
 ---
 
-# 28/05/25 - Tarefas
+# Reunião Cliente X
 
-## Resumo
-Lista de tarefas e anotações do dia
+## 📋 Tarefas
+- ✅ Discutir proposta  
+- 📌 Agendar follow-up
 
-## Tarefas
-- ✅ Revisar código
-- 📋 Documentar projeto
-
-## Notas
-- Manhã produtiva
+## 📝 Notas
+- 💡 Ideia: integração API
 ```
 
-## 🧠 ChromaDB & Busca Semântica
+## ⚙️ Configuração Avançada
 
-O projeto indexa automaticamente todo conteúdo no ChromaDB, permitindo:
+### 🔐 Obtendo o Master Token do Google Keep
 
-- **Busca semântica** por similaridade
-- **Recuperação** de contexto relevante
-- **Embeddings multilingues** otimizados
-- **Metadados estruturados** para filtragem
+O master token é mais seguro que armazenar senhas e tem validade estendida.
 
-## 🐛 Troubleshooting
+**Métodos disponíveis:**
+1. **📖 Guia Oficial**: [Como obter master token](CONFIG.md)
+2. **🔧 Scripts Auxiliares**: [Token Scripts Repository](https://github.com/thiago-gmacedo/token-scripts)
+3. **📚 Referência Java**: [GPSAuth Java](https://github.com/rukins/gpsoauth-java)
 
-### Problemas comuns:
+### 🎛️ Variáveis de Ambiente
 
-1. **Erro de autenticação Google Keep:**
-   - Verifique master token no `.env/config`
-   - Confirme email correto
+```env
+# 🔑 OBRIGATÓRIAS
+GOOGLE_EMAIL=seu.email@gmail.com
+GOOGLE_MASTER_TOKEN=ya29.a0AfH6SMB...
+OPENAI_API_KEY=sk-proj-abc123...
 
-2. **Erro API OpenAI:**
-   - Verifique chave API válida
-   - Confirme créditos disponíveis
+# 📁 OPCIONAIS (caminhos personalizados)
+OBS_PATH=~/Documents/MyObsidianVault
+CHROMA_DB_PATH=~/data/vectordb
+```
 
-3. **Nenhuma nota encontrada:**
-   - Confirme que há notas de hoje
-   - Verifique se label existe
-   - Confirme notas têm anexos de imagem
+### ⏰ Configuração de Horários
 
-4. **Problemas de caminho/configuração:**
-   - Execute `./setup_check.sh` para diagnóstico completo
-   - Verifique logs em `logs/pipeline.log`
-   - Confirme permissões de escrita nos diretórios
+Edite `run_loop.sh` para personalizar horários de execução:
 
-5. **Script não executa no servidor:**
-   - Verifique permissões: `chmod +x run_loop.sh setup_check.sh`
-   - Confirme que o arquivo `.env/config` existe
-   - Verifique logs para detalhes do erro
+```bash
+# Linha ~21: Modificar função is_execution_time()
+if [[ ("$current_hour" == "06" || "$current_hour" == "18") && "$current_minute" -lt "05" ]]; then
+    return 0  # Agora executa às 6h e 18h
+fi
+```
 
-## 📝 Changelog
+### 🔍 Configuração ChromaDB
 
-### v2.0.0 (30/05/2025) - Deploy de Servidor
-- ✨ **Execução agendada** para servidores (1h e 4h da manhã)
-- ✨ **Caminhos configuráveis** via .env (OBS_PATH, CHROMA_DB_PATH)
-- ✨ **Sistema de logs** completo com timestamps e níveis
-- ✨ **Setup automático** com script de verificação
-- ✨ **Deploy universal** funciona em qualquer servidor Linux/macOS
-- ✨ **Criação automática** de diretórios se não existirem
+O sistema cria automaticamente:
+- **Coleção**: `handwritten_notes`
+- **Modelo**: `paraphrase-multilingual-MiniLM-L12-v2`
+- **Metadados**: Título, data, palavras-chave, resumo
+
+Para consultas avançadas, veja [README_CHROMA.md](src/README_CHROMA.md).
+
+## 🔍 Exemplo de Saída Completa
+
+### 🎯 Busca Semântica no ChromaDB
+
+```python
+# Exemplo de busca no ChromaDB
+from src.chroma_indexer import ChromaIndexer
+
+indexer = ChromaIndexer()
+results = indexer.query_similar_notes("reunião cliente", n_results=3)
+
+# Retorna notas similares com scores de similaridade
+```
+
+### 📊 Estrutura JSON Completa
+
+```json
+{
+  "title": "28/05/25 - Planejamento Semanal",
+  "data": "28/05/25",
+  "summary": "Organização de tarefas e metas da semana",
+  "keywords": ["planejamento", "tarefas", "metas", "produtividade"],
+  "tasks": [
+    {"task": "Finalizar apresentação", "status": "done"},
+    {"task": "Revisar código do projeto", "status": "todo"},
+    {"task": "Agendar reunião com cliente", "status": "todo"}
+  ],
+  "notes": [
+    "Priorizar tarefas urgentes",
+    "Reservar tempo para revisão de código"
+  ],
+  "reminders": [
+    "Ligar para cliente às 14h",
+    "Backup do projeto na sexta"
+  ]
+}
+```
+
+### 📝 Arquivo Obsidian Gerado
+
+```markdown
+---
+title: "28/05/25 - Planejamento Semanal"
+created: "2025-05-28T00:00:00"
+last_modified: "2025-05-29T01:23:45"
+embedding_date: "2025-05-29T01:23:45"
+source_id: "keep_280525_planejamento_semanal"
+vector_id: "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6"
+summary: "Organização de tarefas e metas da semana"
+keywords:
+  - "planejamento"
+  - "tarefas" 
+  - "metas"
+  - "produtividade"
+---
+
+# 28/05/25 - Planejamento Semanal
+
+## 📝 Resumo
+Organização de tarefas e metas da semana
+
+## 📋 Tarefas
+- ✅ Finalizar apresentação
+- 📌 Revisar código do projeto  
+- 📌 Agendar reunião com cliente
+
+## 📓 Notas
+- Priorizar tarefas urgentes
+- Reservar tempo para revisão de código
+
+## ⏰ Lembretes
+- 📞 Ligar para cliente às 14h
+- 💾 Backup do projeto na sexta
+
+---
+*Processado automaticamente pelo OCR Keep Pipeline*
+```
+
+## 🚨 Solução de Problemas
+
+### ❌ Problemas Comuns e Soluções
+
+| Problema | Possível Causa | Solução |
+|----------|---------------|---------|
+| 🔐 **Erro de autenticação Keep** | Master token inválido/expirado | Regenerar token seguindo [CONFIG.md](CONFIG.md) |
+| 💳 **Erro API OpenAI** | Chave inválida ou sem créditos | Verificar chave e saldo na conta OpenAI |
+| 📋 **Nenhuma nota encontrada** | Sem notas hoje ou label inexistente | Verificar notas no Keep e labels utilizadas |
+| 📁 **Erro de permissão** | Diretórios sem permissão de escrita | `chmod 755` nos diretórios ou usar `sudo` |
+| 🐍 **Módulos não encontrados** | Ambiente virtual não ativado | `source venv/bin/activate` |
+
+### 🔧 Comandos de Diagnóstico
+
+```bash
+# 🩺 Verificação completa do sistema
+./setup_check.sh
+
+# 📊 Verificar logs detalhados
+tail -50 logs/pipeline.log
+
+# 🐍 Verificar ambiente Python
+python --version
+pip list | grep -E "(openai|gkeepapi|chromadb)"
+
+# 📁 Verificar permissões de diretórios
+ls -la obsidian_notes/ chroma_db/ logs/
+
+# 🔐 Verificar arquivo de configuração
+cat .env/config | grep -v TOKEN  # Mostra config sem expor tokens
+```
+
+### 🆘 Debug Modo Verbose
+
+```bash
+# Executar com logs detalhados
+python src/main.py --verbose
+
+# Ou habilitar debug no código
+export PYTHONPATH=.
+export DEBUG=1
+python src/main.py
+```
+
+### 📞 Suporte
+
+1. **📖 Documentação**: Verifique [CONFIG.md](CONFIG.md) para setup detalhado
+2. **🔍 Issues**: Reporte problemas no [GitHub Issues](https://github.com/thiago-gmacedo/ocr-keep-obsidian/issues)
+3. **📧 Contato**: Para dúvidas específicas, abra uma issue com:
+   - Logs relevantes (sem expor credenciais)
+   - Versão do Python e SO
+   - Passos para reproduzir o problema
+
+## 🗺️ Roadmap & Próximos Passos
+
+### 🎯 Em Desenvolvimento (v2.1.0)
+- [ ] **🌐 Interface Web**: Dashboard para monitoramento e controle
+- [ ] **📱 App Mobile**: Companion app para captura direta
+- [ ] **🔄 Sync Bidireccional**: Obsidian → Keep para edições
+- [ ] **🎨 Themes Obsidian**: Templates customizáveis para diferentes tipos de nota
+
+### 🚀 Planejado (v2.2.0)
+- [ ] **🤖 Auto-categorização**: IA para classificação automática de notas
+- [ ] **📊 Analytics**: Dashboard com estatísticas de produtividade
+- [ ] **🔗 Integrações**: Notion, Anki, Logseq
+- [ ] **🌍 Multi-idiomas**: Suporte completo a idiomas não-latinos
+
+### 💡 Ideias Futuras
+- [ ] **🧠 Knowledge Graph**: Visualização de conexões entre notas
+- [ ] **🎤 Audio OCR**: Processamento de notas de voz
+- [ ] **📷 Batch Processing**: Processamento de múltiplas imagens simultaneamente
+- [ ] **☁️ Cloud Deploy**: Deploy automatizado em cloud (AWS, GCP, Azure)
+
+### 🤝 Como Contribuir
+
+**Áreas que precisam de ajuda:**
+- 🐛 **Testing**: Testar em diferentes SOs e configurações
+- 📖 **Documentação**: Melhorar guides e tutoriais
+- 🌍 **Localização**: Tradução para outros idiomas
+- 🎨 **UI/UX**: Design da interface web planejada
+- 🔧 **DevOps**: Containerização e deploy automatizado
+
+**Para contribuir:**
+1. 🍴 Fork o projeto
+2. 🌿 Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
+3. 💾 Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
+4. 📤 Push para a branch (`git push origin feature/AmazingFeature`)
+5. 🔃 Abra um Pull Request
+
+## 📈 Changelog
+
+### 🚀 v2.0.0 (29/05/2025) - Major Release
+- ✨ **Execução agendada** automática para servidores
+- ✨ **Caminhos configuráveis** via .env (OBS_PATH, CHROMA_DB_PATH)  
+- ✨ **Sistema de logs** robusto com timestamps
+- ✨ **Setup automático** com verificação de dependências
+- ✨ **Deploy universal** compatível com Linux/macOS
+- ✨ **Criação automática** de diretórios inexistentes
 - ✨ **Suporte ~** (home directory) em caminhos
-- ✨ **Prevenção de execuções duplas** no mesmo horário
-- 🔧 **Segurança** com permissões 600 para arquivos de configuração
+- ✨ **Prevenção múltiplas execuções** no mesmo horário
+- 🔒 **Segurança melhorada** com permissões restritivas para .env
 
-### v1.0.0 (29/05/2025)
-- Pipeline completo funcional
-- Integração Google Keep + OCR + Obsidian + ChromaDB
-- Sistema de controle de duplicatas
-- Filtragem por labels/tags
-- Documentação completa
+### 📝 v1.0.0 (28/05/2025) - Initial Release
+- 🎉 Pipeline completo funcional
+- 🔗 Integração Google Keep + GPT-4 Vision + Obsidian + ChromaDB
+- 🔄 Sistema de controle de duplicatas
+- 🏷️ Filtragem por labels/tags
+- 📚 Documentação completa inicial
 
 ## 📄 Licença
 
-Este projeto está sob licença MIT. Veja [LICENSE](LICENSE) para detalhes.
+Este projeto está licenciado sob a **MIT License** - veja o arquivo [LICENSE](LICENSE) para detalhes.
 
-## 🤝 Contribuição
+```
+MIT License
 
-Contribuições são bem-vindas! Por favor:
+Copyright (c) 2025 Thiago Macedo
 
-1. Fork o projeto
-2. Crie uma branch para sua feature
-3. Commit suas mudanças
-4. Push para a branch
-5. Abra um Pull Request
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software...
+```
+
+### 🤝 Código de Conduta
+
+Este projeto adere ao [Contributor Covenant](https://www.contributor-covenant.org/) código de conduta. Ao participar, você concorda em seguir este código.
+
+## 🙏 Agradecimentos
+
+- **OpenAI** pelo GPT-4 Vision que tornou OCR de manuscritos possível
+- **ChromaDB** pela excelente biblioteca de vector database
+- **gkeepapi** por tornar a integração com Google Keep simples
+- **Sentence Transformers** pelos embeddings multilingues de qualidade
+- **Obsidian** pela inspiração no formato de notas estruturadas
+
+## 📬 Contato & Suporte
+
+- **📧 Email**: [seu-email@exemplo.com](mailto:seu-email@exemplo.com)
+- **🐙 GitHub**: [@thiago-gmacedo](https://github.com/thiago-gmacedo)
+- **🐛 Issues**: [Reportar Problemas](https://github.com/thiago-gmacedo/ocr-keep-obsidian/issues)
+- **💬 Discussões**: [GitHub Discussions](https://github.com/thiago-gmacedo/ocr-keep-obsidian/discussions)
 
 ---
 
-**Desenvolvido com ❤️ para automatizar o processamento de notas manuscritas**
+<div align="center">
+
+**🚀 Transforme suas ideias manuscritas em conhecimento digital estruturado**
+
+[![⭐ Star no GitHub](https://img.shields.io/github/stars/thiago-gmacedo/ocr-keep-obsidian?style=social)](https://github.com/thiago-gmacedo/ocr-keep-obsidian)
+[![🍴 Fork](https://img.shields.io/github/forks/thiago-gmacedo/ocr-keep-obsidian?style=social)](https://github.com/thiago-gmacedo/ocr-keep-obsidian/fork)
+
+*Desenvolvido com ❤️ por [Thiago Macedo](https://github.com/thiago-gmacedo)*
+
+</div>
