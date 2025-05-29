@@ -24,6 +24,43 @@ IMAGE_DIR = Path(__file__).parent / "image"  # Diretório para salvar imagens
 PROCESSED_NOTES_FILE = Path(__file__).parent / ".processed_notes.json"  # Arquivo para registro de notas processadas
 
 
+def convert_json_to_obsidian(json_data, output_folder="obsidian_notes"):
+    """
+    Converte dados JSON para arquivo Markdown do Obsidian
+    
+    Args:
+        json_data (dict): Dados JSON estruturados
+        output_folder (str): Diretório de saída (padrão: obsidian_notes)
+    
+    Returns:
+        bool: True se conversão foi bem-sucedida, False caso contrário
+    """
+    try:
+        # Importar dinamicamente para evitar problemas de importação circular
+        import importlib.util
+        
+        # Caminho para o módulo obsidian_writer
+        obsidian_writer_path = Path(__file__).parent / "src" / "obsidian_writer.py"
+        
+        # Carregar o módulo dinamicamente
+        spec = importlib.util.spec_from_file_location("obsidian_writer", obsidian_writer_path)
+        obsidian_writer = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(obsidian_writer)
+        
+        # Validar estrutura do JSON
+        if not obsidian_writer.validate_json_structure(json_data):
+            print("⚠️ Estrutura JSON inválida para conversão Obsidian")
+            return False
+        
+        # Converter para Obsidian
+        obsidian_writer.json_to_obsidian(json_data, output_folder)
+        return True
+        
+    except Exception as e:
+        print(f"⚠️ Erro ao converter para Obsidian: {e}")
+        return False
+
+
 def encode_image_to_base64(path):
     """Converte uma imagem para base64"""
     try:
@@ -51,15 +88,20 @@ def transcribe_handwriting(image_path: str) -> str:
                         {
                             "type": "text",
                             "text": (
-                                "Transcreva TODO o texto manuscrito presente na imagem abaixo. "
-                                "Não utilize formatação, apenas texto simples. "
-                                "Não utilize emojis, e seja bem observador ao observar o estado das tarefas, busque entender a intenção do texto."
-                                "Para representar o status de uma tarefa use os seguintes símbolos:"
-                                "[x] - tarefa concluída, [ ] - tarefa não concluída"
-                                "Se houver texto ilegível, escreva [ilegível]."
-                                "Mantenha a ordem das palavras e linhas; se algo estiver ilegível, escreva [ilegível]. "
-                                "Não acrescente comentários extras."                                
-                                "Todo o conteúdo transcrito deve ser separado em 3 partes: Tarefas, notas e lembretes."
+                                "Todo o texto utilizado para gerar o JSON deve ser extraido da imagem."
+                                "A imagem contém texto manuscrito que deve ser transcrito e organizado."
+                                "A transcrição deve ser feita de forma precisa e fiel ao conteúdo da imagem"
+                                "caso alguma parte fique ilegivel, use a logica para completar a lacuna."
+                                "Todo a imagem virá dividida em blocos de texto, tarefas, notas e lembretes."
+                                "Organize o seguinte texto OCR em formato JSON com os campos:"
+                                "title (se houver, ou o dia neste formato dia/mes/ano - segunda-feira(dia da semana)),"
+                                "Todas as partes devem vir encaixadas em algum dos campos definidos" 
+                                "data (data encontrada no texto ou deixe vazio),"
+                                "summary (resuma o conteúdo em uma frase),"
+                                "keywords (até 5 palavras-chave relevantes),"
+                                "tasks (lista de tarefas com status done ou todo),"
+                                "notes (lista de anotações gerais),"
+                                "reminders (lista de lembretes, coisas a lembrar ou não esquecer)."
                             )
                         },
                         {
@@ -92,9 +134,39 @@ def process_single_image(img_path):
     
     # Salvar transcrição em arquivo
     try:
-        out_file = Path(img_path).with_suffix(".txt")
-        out_file.write_text(texto, encoding="utf-8")
-        print(f"✅ Transcrição salva em {out_file}")
+        # Detectar se o conteúdo é JSON válido
+        json_data = None
+        json_content = None
+        
+        # Tentar extrair JSON de markdown code blocks primeiro
+        import re
+        json_match = re.search(r'```(?:json)?\s*\n?(.*?)\n?```', texto, re.DOTALL | re.IGNORECASE)
+        if json_match:
+            json_content = json_match.group(1).strip()
+        else:
+            # Se não há code blocks, tentar o texto inteiro
+            json_content = texto.strip()
+        
+        try:
+            json_data = json.loads(json_content)
+            # É JSON válido, salvar como .json
+            out_file = Path(img_path).with_suffix(".json")
+            with open(out_file, "w", encoding="utf-8") as f:
+                json.dump(json_data, f, indent=2, ensure_ascii=False)
+            print(f"✅ JSON estruturado salvo em {out_file}")
+            
+            # Automaticamente converter para Obsidian
+            print("🔄 Convertendo automaticamente para Obsidian...")
+            if convert_json_to_obsidian(json_data):
+                print("✅ Arquivo Obsidian gerado com sucesso!")
+            else:
+                print("⚠️ Falha na conversão para Obsidian")
+                
+        except json.JSONDecodeError:
+            # Não é JSON válido, salvar como .txt
+            out_file = Path(img_path).with_suffix(".txt")
+            out_file.write_text(texto, encoding="utf-8")
+            print(f"✅ Transcrição salva em {out_file}")
     except Exception as e:
         print(f"❌ Erro ao salvar o arquivo de saída: {e}")
 
@@ -430,9 +502,39 @@ def process_keep_notes(label_name):
                     
                     # Salvar a transcrição
                     try:
-                        out_file = img_path.with_suffix(".txt")
-                        out_file.write_text(texto, encoding="utf-8")
-                        print(f"✅ Transcrição salva em: {out_file}")
+                        # Detectar se o conteúdo é JSON válido
+                        json_data = None
+                        json_content = None
+                        
+                        # Tentar extrair JSON de markdown code blocks primeiro
+                        import re
+                        json_match = re.search(r'```(?:json)?\s*\n?(.*?)\n?```', texto, re.DOTALL | re.IGNORECASE)
+                        if json_match:
+                            json_content = json_match.group(1).strip()
+                        else:
+                            # Se não há code blocks, tentar o texto inteiro
+                            json_content = texto.strip()
+                        
+                        try:
+                            json_data = json.loads(json_content)
+                            # É JSON válido, salvar como .json
+                            out_file = img_path.with_suffix(".json")
+                            with open(out_file, "w", encoding="utf-8") as f:
+                                json.dump(json_data, f, indent=2, ensure_ascii=False)
+                            print(f"✅ JSON estruturado salvo em: {out_file}")
+                            
+                            # Automaticamente converter para Obsidian
+                            print("🔄 Convertendo automaticamente para Obsidian...")
+                            if convert_json_to_obsidian(json_data):
+                                print("✅ Arquivo Obsidian gerado com sucesso!")
+                            else:
+                                print("⚠️ Falha na conversão para Obsidian")
+                                
+                        except json.JSONDecodeError:
+                            # Não é JSON válido, salvar como .txt
+                            out_file = img_path.with_suffix(".txt")
+                            out_file.write_text(texto, encoding="utf-8")
+                            print(f"✅ Transcrição salva em: {out_file}")
                         blobs_processed = True
                     except Exception as e:
                         print(f"❌ Erro ao salvar o arquivo de saída: {e}")

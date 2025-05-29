@@ -2,3 +2,7 @@
 venv
 image
 .processed_notes.json
+__pycache__/
+#Ignore md filees inside obsidian_notes folder
+obsidian_notes/**/*.md
+
