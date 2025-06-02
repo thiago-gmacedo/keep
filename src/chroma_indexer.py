@@ -287,12 +287,13 @@ class ChromaIndexer:
             return {"error": str(e)}
 
 
-def index_note_in_chroma(json_data: Dict[str, Any], chroma_client: ChromaClient = None) -> bool:
+def index_note_in_chroma(json_data: Dict[str, Any], persist_directory: str = "./chroma_db", chroma_client: ChromaClient = None) -> bool:
     """
     Função de conveniência para indexar uma nota no ChromaDB
     
     Args:
         json_data (dict): Dados JSON estruturados da nota
+        persist_directory (str): Diretório para persistir o banco de dados ChromaDB
         chroma_client (ChromaClient, optional): Cliente ChromaDB (se None, cria novo)
         
     Returns:
@@ -301,10 +302,10 @@ def index_note_in_chroma(json_data: Dict[str, Any], chroma_client: ChromaClient 
     try:
         # Se não foi fornecido cliente, criar novo indexador
         if chroma_client is None:
-            indexer = ChromaIndexer()
+            indexer = ChromaIndexer(persist_directory=persist_directory)
         else:
             # Usar cliente fornecido - criar indexador customizado
-            indexer = ChromaIndexer()
+            indexer = ChromaIndexer(persist_directory=persist_directory)
             # Substituir o cliente padrão pelo fornecido
             indexer.client = chroma_client
             # Recriar a coleção com o cliente fornecido

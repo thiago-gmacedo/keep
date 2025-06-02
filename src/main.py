@@ -82,16 +82,54 @@ __version__ = "1.0.0"
 __author__ = "Thiago Macedom"
 __date__ = "29/05/2025"
 
-# Configurações
+# Configurações iniciais (serão atualizadas por load_config_paths)
 IMAGES_DIR = ROOT_DIR / "images"
 PROCESSED_DIR = IMAGES_DIR / "processed"
-OBSIDIAN_DIR = ROOT_DIR / "obsidian_notes"
+OBSIDIAN_DIR = ROOT_DIR / "obsidian_notes"  # Padrão, será atualizado
+CHROMA_DB_DIR = ROOT_DIR / "chroma_db"  # Padrão, será atualizado
 PROCESSED_NOTES_FILE = ROOT_DIR / ".processed_notes.json"
+
+
+def load_config_paths():
+    """
+    Carrega caminhos personalizados das variáveis de ambiente
+    
+    Returns:
+        tuple: (obsidian_path, chroma_db_path)
+    """
+    global OBSIDIAN_DIR, CHROMA_DB_DIR
+    
+    config = load_keep_credentials()
+    
+    # Carregar caminhos personalizados ou usar padrões
+    obs_path = config.get('OBS_PATH') or os.environ.get('OBS_PATH')
+    chroma_path = config.get('CHROMA_DB_PATH') or os.environ.get('CHROMA_DB_PATH')
+    
+    if obs_path:
+        OBSIDIAN_DIR = Path(obs_path)
+        if not OBSIDIAN_DIR.is_absolute():
+            OBSIDIAN_DIR = ROOT_DIR / obs_path
+        print(f"📁 Usando caminho personalizado para Obsidian: {OBSIDIAN_DIR}")
+    else:
+        OBSIDIAN_DIR = ROOT_DIR / "obsidian_notes"
+        print(f"📁 Usando caminho padrão para Obsidian: {OBSIDIAN_DIR}")
+    
+    if chroma_path:
+        CHROMA_DB_DIR = Path(chroma_path)
+        if not CHROMA_DB_DIR.is_absolute():
+            CHROMA_DB_DIR = ROOT_DIR / chroma_path
+        print(f"🧠 Usando caminho personalizado para ChromaDB: {CHROMA_DB_DIR}")
+    else:
+        CHROMA_DB_DIR = ROOT_DIR / "chroma_db"
+        print(f"🧠 Usando caminho padrão para ChromaDB: {CHROMA_DB_DIR}")
+    
+    return OBSIDIAN_DIR, CHROMA_DB_DIR
+
 
 # Criar diretórios necessários
 IMAGES_DIR.mkdir(exist_ok=True)
 PROCESSED_DIR.mkdir(exist_ok=True)
-OBSIDIAN_DIR.mkdir(exist_ok=True)
+# Os diretórios personalizados serão criados após carregamento da configuração
 
 
 def setup_api_keys():
@@ -421,7 +459,8 @@ def index_in_chromadb(json_data: Dict[str, Any]) -> bool:
     logger.info("🧠 Indexando no ChromaDB...")
     
     try:
-        success = index_note_in_chroma(json_data)
+        # Usar o caminho customizado do ChromaDB
+        success = index_note_in_chroma(json_data, persist_directory=str(CHROMA_DB_DIR))
         if success:
             logger.info("✅ Dados indexados no ChromaDB com sucesso")
         else:
@@ -530,10 +569,18 @@ def run_pipeline(label_name: Optional[str] = None):
     start_time = datetime.now()
     
     try:
-        # Etapa 1: Configurar APIs
+        # Etapa 1: Carregar configurações de caminhos personalizados
+        print("\n⚙️ Carregando configurações...")
+        obsidian_path, chroma_path = load_config_paths()
+        
+        # Criar diretórios personalizados
+        obsidian_path.mkdir(parents=True, exist_ok=True)
+        chroma_path.mkdir(parents=True, exist_ok=True)
+        
+        # Etapa 2: Configurar APIs
         setup_api_keys()
         
-        # Etapa 2: Conectar ao Google Keep
+        # Etapa 3: Conectar ao Google Keep
         print("\n🔗 Conectando ao Google Keep...")
         keep = connect_to_keep()
         
@@ -608,7 +655,7 @@ def run_pipeline(label_name: Optional[str] = None):
         print(f"📁 Diretórios:")
         print(f"   🖼️ Imagens processadas: {PROCESSED_DIR}")
         print(f"   📚 Notas Obsidian: {OBSIDIAN_DIR}")
-        print(f"   🧠 ChromaDB: ./chroma_db")
+        print(f"   🧠 ChromaDB: {CHROMA_DB_DIR}")
         print(f"{'='*80}")
         
     except Exception as e:
