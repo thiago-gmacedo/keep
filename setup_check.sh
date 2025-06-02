@@ -182,7 +182,7 @@ if [ -f ".env/config" ] && grep -q "sk-" ".env/config" && grep -q "@" ".env/conf
     log_ok "Configuração básica OK"
     echo -e "\n🚀 ${GREEN}PRONTO PARA USAR!${NC}"
     echo -e "\n📖 Para executar:"
-    echo "   • Pipeline único: python src/main.py"
+    echo "   • Pipeline único: python -m src.main"
     echo "   • Execução contínua: ./run_loop.sh"
     echo "   • Teste de busca: python teste.py"
 else
@@ -190,7 +190,7 @@ else
     echo -e "\n📝 ${YELLOW}PRÓXIMOS PASSOS:${NC}"
     echo "   1. Configure suas credenciais em .env/config"
     echo "   2. Instale dependências: pip install -r requirements.txt"
-    echo "   3. Execute: python src/main.py"
+    echo "   3. Execute: python -m src.main"
 fi
 
 echo -e "\n📚 Documentação completa em: README.md e CONFIG.md"

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """
+OCR Keep → Obsidian + Vector DB v1.0.0
 Main Pipeline - Centralizador de todo o fluxo de processamento de notas manuscritas
 
 Este módulo executa o pipeline completo:
@@ -10,48 +11,53 @@ Este módulo executa o pipeline completo:
 5. Gera arquivos .md no padrão Obsidian
 6. Indexa no ChromaDB
 7. Move imagens processadas
+
+Autor: Thiago Macedom
+Data: 29/05/2025
+Versão: 1.0.0
 """
 
 import sys
 import os
 import json
-import re
 import shutil
 import logging
 from pathlib import Path
 from datetime import datetime
 from typing import List, Dict, Any, Optional
 
+# Carregar variáveis de ambiente
+try:
+    from dotenv import load_dotenv
+    # Carregar do arquivo .env/config
+    env_file = Path(__file__).parent.parent / '.env' / 'config'
+    load_dotenv(env_file)
+    print("✅ Variáveis de ambiente carregadas automaticamente")
+except ImportError:
+    print("⚠️ python-dotenv não instalado, usando variáveis de ambiente do sistema")
+
 # Adicionar diretório raiz ao path para importações
 ROOT_DIR = Path(__file__).parent.parent
 sys.path.insert(0, str(ROOT_DIR))
+# Adicionar diretório src ao path para importações locais
+SRC_DIR = Path(__file__).parent
+sys.path.insert(0, str(SRC_DIR))
 
 # Configurar logging
-def setup_logging():
-    """Configura sistema de logging"""
-    log_dir = ROOT_DIR / "logs"
-    log_dir.mkdir(exist_ok=True)
-    
-    log_file = log_dir / "pipeline.log"
-    
-    # Configurar formato do log
-    logging.basicConfig(
-        level=logging.INFO,
-        format='%(asctime)s - %(levelname)s - %(message)s',
-        handlers=[
-            logging.FileHandler(log_file, encoding='utf-8'),
-            logging.StreamHandler()  # Também exibe no console
-        ]
-    )
-    return logging.getLogger(__name__)
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler(ROOT_DIR / 'logs' / 'pipeline.log'),
+        logging.StreamHandler()
+    ]
+)
+logger = logging.getLogger(__name__)
 
-# Configurar logging no início
-logger = setup_logging()
-
-# Importações dos módulos existentes
+# Importações dos módulos reorganizados
 try:
-    # Importar funções de conectividade e credenciais do Google Keep
-    from ocr_extractor import (
+    # Importar funções de conectividade e credenciais do Google Keep (agora em src/)
+    from src.ocr_extractor import (
         connect_to_keep, 
         load_keep_credentials,
         transcribe_handwriting,
@@ -59,92 +65,38 @@ try:
         encode_image_to_base64
     )
     
-    # Importar módulo de geração Obsidian
-    from src.obsidian_writer import json_to_obsidian, validate_json_structure
-    
-    # Importar módulo de indexação ChromaDB
+    # Importar módulos de parsing e exportação
+    from src.parser import parse_ocr_text
+    from src.obsidian_exporter import convert_to_md
     from src.chroma_indexer import index_note_in_chroma
     
-    print("✅ Todos os módulos importados com sucesso")
-    logger.info("Módulos importados com sucesso")
+    logger.info("✅ Todos os módulos importados com sucesso")
     
 except ImportError as e:
-    error_msg = f"Erro ao importar módulos: {e}"
-    print(f"❌ {error_msg}")
-    logger.error(error_msg)
-    print("Certifique-se de que todos os módulos estão no local correto")
+    logger.error(f"❌ Erro ao importar módulos: {e}")
+    logger.error("Certifique-se de que todos os módulos estão no local correto")
     sys.exit(1)
 
-def load_config_paths():
-    """Carrega caminhos de configuração do arquivo .env e cria diretórios automaticamente"""
-    from ocr_extractor import load_keep_credentials
-    
-    config = load_keep_credentials()
-    
-    # Caminhos padrão como fallback (relativos ao projeto)
-    default_obs_path = ROOT_DIR / "obsidian_notes"
-    default_chroma_path = ROOT_DIR / "chroma_db"
-    
-    # Obter caminhos da configuração ou usar padrão
-    obs_path_str = config.get('OBS_PATH', str(default_obs_path))
-    chroma_path_str = config.get('CHROMA_DB_PATH', str(default_chroma_path))
-    
-    # Converter para Path objects
-    obs_path = Path(obs_path_str)
-    chroma_path = Path(chroma_path_str)
-    
-    # Expandir ~ para home directory se necessário
-    obs_path = obs_path.expanduser()
-    chroma_path = chroma_path.expanduser()
-    
-    try:
-        # Criar diretórios automaticamente se não existirem
-        obs_path.mkdir(parents=True, exist_ok=True)
-        chroma_path.mkdir(parents=True, exist_ok=True)
-        
-        logger.info(f"✅ Diretórios configurados e criados:")
-        logger.info(f"   📚 Obsidian: {obs_path}")
-        logger.info(f"   🧠 ChromaDB: {chroma_path}")
-        
-        # Verificar se são caminhos válidos e acessíveis
-        if not obs_path.is_dir():
-            raise Exception(f"Não foi possível criar diretório Obsidian: {obs_path}")
-        if not chroma_path.is_dir():
-            raise Exception(f"Não foi possível criar diretório ChromaDB: {chroma_path}")
-            
-    except Exception as e:
-        error_msg = f"Erro ao configurar diretórios: {e}"
-        logger.error(error_msg)
-        print(f"❌ {error_msg}")
-        print("🔄 Usando diretórios padrão do projeto...")
-        
-        # Fallback para diretórios locais do projeto
-        obs_path = default_obs_path
-        chroma_path = default_chroma_path
-        obs_path.mkdir(parents=True, exist_ok=True)
-        chroma_path.mkdir(parents=True, exist_ok=True)
-        
-        logger.info(f"📁 Usando diretórios padrão - Obsidian: {obs_path}, ChromaDB: {chroma_path}")
-    
-    return obs_path, chroma_path
-
-# Carregar caminhos de configuração
-OBSIDIAN_DIR, CHROMA_DB_PATH = load_config_paths()
+# Informações de versão
+__version__ = "1.0.0"
+__author__ = "Thiago Macedom"
+__date__ = "29/05/2025"
 
 # Configurações
 IMAGES_DIR = ROOT_DIR / "images"
 PROCESSED_DIR = IMAGES_DIR / "processed"
+OBSIDIAN_DIR = ROOT_DIR / "obsidian_notes"
 PROCESSED_NOTES_FILE = ROOT_DIR / ".processed_notes.json"
 
 # Criar diretórios necessários
 IMAGES_DIR.mkdir(exist_ok=True)
 PROCESSED_DIR.mkdir(exist_ok=True)
+OBSIDIAN_DIR.mkdir(exist_ok=True)
 
 
 def setup_api_keys():
     """Configura as chaves de API necessárias"""
     print("🔑 Verificando configuração de APIs...")
-    logger.info("Verificando configuração de APIs")
     
     # Carregar credenciais do arquivo de configuração
     config = load_keep_credentials()
@@ -152,9 +104,7 @@ def setup_api_keys():
     # Verificar chave OpenAI
     openai_key = config.get('OPENAI_API_KEY') or os.environ.get('OPENAI_API_KEY')
     if not openai_key or openai_key.startswith('sua-chave'):
-        error_msg = "Chave da API OpenAI não configurada no arquivo .env/config"
-        logger.error(error_msg)
-        raise ValueError(f"❌ {error_msg}")
+        raise ValueError("❌ Chave da API OpenAI não configurada no arquivo .env/config")
     
     # Configurar OpenAI
     try:
@@ -162,19 +112,15 @@ def setup_api_keys():
         openai.api_key = openai_key
     except ImportError:
         print("⚠️ OpenAI não instalado, mas chave configurada")
-        logger.warning("OpenAI não instalado, mas chave configurada")
     
     # Verificar credenciais Google Keep
     email = config.get('GOOGLE_EMAIL')
     master_token = config.get('GOOGLE_MASTER_TOKEN')
     
     if not email or not master_token:
-        error_msg = "Credenciais do Google Keep não configuradas no arquivo .env/config"
-        logger.error(error_msg)
-        raise ValueError(f"❌ {error_msg}")
+        raise ValueError("❌ Credenciais do Google Keep não configuradas no arquivo .env/config")
     
     print("✅ APIs configuradas com sucesso")
-    logger.info("APIs configuradas com sucesso")
     return config
 
 
@@ -205,11 +151,8 @@ def save_processed_note(note_id: str, label_name: str = "main_pipeline"):
         with open(PROCESSED_NOTES_FILE, 'w', encoding='utf-8') as f:
             json.dump(processed_notes, f, indent=2, ensure_ascii=False)
         print(f"📝 Nota {note_id[:8]} registrada como processada")
-        logger.info(f"Nota {note_id[:8]} registrada como processada")
     except Exception as e:
-        error_msg = f"Erro ao salvar registro: {e}"
-        print(f"⚠️ {error_msg}")
-        logger.error(error_msg)
+        print(f"⚠️ Erro ao salvar registro: {e}")
 
 
 def is_note_processed(note_id: str, label_name: str = "main_pipeline") -> bool:
@@ -302,7 +245,7 @@ def download_note_images(keep, note) -> List[Path]:
             ocr_extractor.keep = keep
             
             # Baixar o blob usando a função existente
-            img_path = download_blob(blob, note.title or "sem_titulo", i)
+            img_path = download_blob(blob, note.title or "sem_titulo", i, keep)
             
             if img_path and img_path.exists():
                 # Mover para o diretório correto se necessário
@@ -354,7 +297,7 @@ def process_image_ocr(image_path: Path) -> str:
 
 def parse_text_to_json(text: str) -> Optional[Dict[str, Any]]:
     """
-    Converte texto extraído em JSON estruturado
+    Converte texto extraído em JSON estruturado usando o módulo parser
     
     Args:
         text: Texto extraído do OCR
@@ -362,33 +305,22 @@ def parse_text_to_json(text: str) -> Optional[Dict[str, Any]]:
     Returns:
         Dicionário JSON estruturado ou None se falhar
     """
-    print("🧠 Estruturando texto com LLM...")
+    logger.info("🧠 Estruturando texto com LLM usando parser module...")
     
     try:
-        # Tentar extrair JSON do texto (pode vir com markdown code blocks)
-        import re
+        # Usar o novo módulo de parsing
+        json_data = parse_ocr_text(text)
         
-        # Primeiro, tentar encontrar blocos de código JSON
-        json_match = re.search(r'```(?:json)?\s*\n?(.*?)\n?```', text, re.DOTALL | re.IGNORECASE)
-        if json_match:
-            json_content = json_match.group(1).strip()
+        if json_data:
+            logger.info("✅ Texto estruturado com sucesso em JSON")
+            return json_data
         else:
-            # Se não há code blocks, usar o texto inteiro
-            json_content = text.strip()
+            logger.warning("⚠️ Falha na estruturação do texto")
+            return None
         
-        # Tentar fazer parse do JSON
-        json_data = json.loads(json_content)
-        
-        # Validar estrutura básica
-        required_fields = ['title', 'summary', 'keywords', 'tasks', 'notes', 'reminders']
-        for field in required_fields:
-            if field not in json_data:
-                json_data[field] = [] if field in ['keywords', 'tasks', 'notes', 'reminders'] else ""
-        
-        print("✅ Texto estruturado com sucesso em JSON")
-        return json_data
-        
-    except json.JSONDecodeError:
+    except Exception as e:
+        logger.error(f"❌ Erro na estruturação do texto: {e}")
+        return None
         print("⚠️ Não foi possível estruturar como JSON - salvando como texto puro")
         return None
     except Exception as e:
@@ -448,7 +380,7 @@ def save_text_data(text: str, image_path: Path) -> Path:
 
 def generate_obsidian_note(json_data: Dict[str, Any]) -> bool:
     """
-    Gera arquivo Markdown para Obsidian
+    Gera arquivo Markdown para Obsidian usando obsidian_exporter
     
     Args:
         json_data: Dados estruturados
@@ -456,26 +388,23 @@ def generate_obsidian_note(json_data: Dict[str, Any]) -> bool:
     Returns:
         True se geração foi bem-sucedida
     """
-    print("📚 Gerando nota Obsidian...")
-    logger.info("Gerando nota Obsidian")
+    logger.info("📚 Gerando nota Obsidian...")
     
     try:
-        # Validar estrutura do JSON
-        if not validate_json_structure(json_data):
-            print("⚠️ Estrutura JSON inválida para Obsidian")
-            logger.warning("Estrutura JSON inválida para Obsidian")
+        # Usar o novo módulo de exportação Obsidian
+        success = convert_to_md(json_data, str(OBSIDIAN_DIR))
+        
+        if success:
+            logger.info("✅ Nota Obsidian gerada com sucesso")
+            return True
+        else:
+            logger.warning("⚠️ Falha na geração da nota Obsidian")
             return False
         
-        # Gerar arquivo Obsidian usando o caminho configurado
-        json_to_obsidian(json_data, str(OBSIDIAN_DIR))
-        print("✅ Nota Obsidian gerada com sucesso")
-        logger.info(f"Nota Obsidian gerada em: {OBSIDIAN_DIR}")
-        return True
-        
     except Exception as e:
-        error_msg = f"Erro ao gerar nota Obsidian: {e}"
-        print(f"❌ {error_msg}")
-        logger.error(error_msg)
+        logger.error(f"❌ Erro ao gerar nota Obsidian: {e}")
+        return False
+        print(f"❌ Erro ao gerar nota Obsidian: {e}")
         return False
 
 
@@ -489,27 +418,18 @@ def index_in_chromadb(json_data: Dict[str, Any]) -> bool:
     Returns:
         True se indexação foi bem-sucedida
     """
-    print("🧠 Indexando no ChromaDB...")
-    logger.info("Indexando no ChromaDB")
+    logger.info("🧠 Indexando no ChromaDB...")
     
     try:
-        # Importar ChromaDB client e passar o caminho configurado
-        import chromadb
-        chroma_client = chromadb.PersistentClient(path=str(CHROMA_DB_PATH))
-        
-        success = index_note_in_chroma(json_data, chroma_client)
+        success = index_note_in_chroma(json_data)
         if success:
-            print("✅ Dados indexados no ChromaDB com sucesso")
-            logger.info(f"Dados indexados no ChromaDB: {CHROMA_DB_PATH}")
+            logger.info("✅ Dados indexados no ChromaDB com sucesso")
         else:
-            print("⚠️ Falha na indexação no ChromaDB")
-            logger.warning("Falha na indexação no ChromaDB")
+            logger.warning("⚠️ Falha na indexação no ChromaDB")
         return success
         
     except Exception as e:
-        error_msg = f"Erro na indexação ChromaDB: {e}"
-        print(f"❌ {error_msg}")
-        logger.error(error_msg)
+        logger.error(f"❌ Erro na indexação ChromaDB: {e}")
         return False
 
 
@@ -602,13 +522,12 @@ def run_pipeline(label_name: Optional[str] = None):
         label_name: Nome da label para filtrar notas (opcional)
     """
     print(f"\n{'='*80}")
-    print(f"🚀 INICIANDO PIPELINE DE PROCESSAMENTO DE NOTAS MANUSCRITAS")
+    print(f"🚀 OCR KEEP → OBSIDIAN + VECTOR DB v{__version__}")
+    print(f"📝 PIPELINE DE PROCESSAMENTO DE NOTAS MANUSCRITAS")
+    print(f"👤 Autor: {__author__} | 📅 Data: {__date__}")
     print(f"{'='*80}")
     
     start_time = datetime.now()
-    logger.info("Iniciando pipeline de processamento")
-    if label_name:
-        logger.info(f"Filtrando por label: {label_name}")
     
     try:
         # Etapa 1: Configurar APIs
@@ -616,16 +535,13 @@ def run_pipeline(label_name: Optional[str] = None):
         
         # Etapa 2: Conectar ao Google Keep
         print("\n🔗 Conectando ao Google Keep...")
-        logger.info("Conectando ao Google Keep")
         keep = connect_to_keep()
         
         # Etapa 3: Buscar novas notas com imagens
         new_notes = get_new_notes_with_images(keep, label_name)
         
         if not new_notes:
-            msg = "Nenhuma nota nova para processar"
-            print(f"ℹ️ {msg}")
-            logger.info(msg)
+            print("ℹ️ Nenhuma nota nova para processar")
             return
         
         # Estatísticas
@@ -634,8 +550,6 @@ def run_pipeline(label_name: Optional[str] = None):
         failed_notes = 0
         total_images = 0
         processed_images = 0
-        
-        logger.info(f"Encontradas {total_notes} notas para processar")
         
         pipeline_label = f"main_pipeline_{label_name}" if label_name else "main_pipeline"
         
@@ -671,25 +585,17 @@ def run_pipeline(label_name: Optional[str] = None):
                 if note_success and processed_images > 0:
                     save_processed_note(note.id, pipeline_label)
                     processed_notes += 1
-                    logger.info(f"Nota processada com sucesso: {note.title or 'sem título'}")
                 else:
                     failed_notes += 1
-                    logger.warning(f"Falha ao processar nota: {note.title or 'sem título'}")
                     
             except Exception as e:
-                error_msg = f"Erro ao processar nota {note.title or 'sem título'}: {e}"
-                print(f"❌ {error_msg}")
-                logger.error(error_msg)
+                print(f"❌ Erro ao processar nota {note.title or 'sem título'}: {e}")
                 failed_notes += 1
                 continue
         
         # Resumo final
         end_time = datetime.now()
         duration = end_time - start_time
-        
-        # Log das estatísticas finais
-        logger.info(f"Pipeline concluído em {duration}")
-        logger.info(f"Estatísticas: {processed_notes}/{total_notes} notas processadas, {processed_images}/{total_images} imagens processadas, {failed_notes} falhas")
         
         print(f"\n{'='*80}")
         print(f"✅ PIPELINE CONCLUÍDO")
@@ -702,13 +608,11 @@ def run_pipeline(label_name: Optional[str] = None):
         print(f"📁 Diretórios:")
         print(f"   🖼️ Imagens processadas: {PROCESSED_DIR}")
         print(f"   📚 Notas Obsidian: {OBSIDIAN_DIR}")
-        print(f"   🧠 ChromaDB: {CHROMA_DB_PATH}")
+        print(f"   🧠 ChromaDB: ./chroma_db")
         print(f"{'='*80}")
         
     except Exception as e:
-        error_msg = f"Erro crítico no pipeline: {e}"
-        print(f"❌ {error_msg}")
-        logger.error(error_msg)
+        print(f"❌ Erro crítico no pipeline: {e}")
         raise
 
 
@@ -723,12 +627,12 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         if sys.argv[1] in ['--help', '-h']:
             print("\n📋 USO DO PIPELINE:")
-            print("  python src/main.py              # Processar todas as notas")
-            print("  python src/main.py LABEL        # Processar notas com label específica")
-            print("  python src/main.py --help       # Exibir esta ajuda")
+            print("  python main.py              # Processar todas as notas")
+            print("  python main.py LABEL        # Processar notas com label específica")
+            print("  python main.py --help       # Exibir esta ajuda")
             print("\nEXEMPLOS:")
-            print("  python src/main.py diario       # Processar notas com label 'diario'")
-            print("  python src/main.py OCR          # Processar notas com label 'OCR'")
+            print("  python main.py diario       # Processar notas com label 'diario'")
+            print("  python main.py OCR          # Processar notas com label 'OCR'")
             sys.exit(0)
         else:
             label_filter = sys.argv[1]
@@ -736,14 +640,9 @@ if __name__ == "__main__":
     
     try:
         run_pipeline(label_filter)
-        logger.info("Pipeline executado com sucesso")
     except KeyboardInterrupt:
-        msg = "Pipeline interrompido pelo usuário"
-        print(f"\n⏹️ {msg}")
-        logger.info(msg)
+        print("\n⏹️ Pipeline interrompido pelo usuário")
         sys.exit(1)
     except Exception as e:
-        error_msg = f"Erro fatal: {e}"
-        print(f"\n💥 {error_msg}")
-        logger.error(error_msg)
+        print(f"\n💥 Erro fatal: {e}")
         sys.exit(1)

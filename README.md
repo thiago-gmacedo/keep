@@ -44,6 +44,7 @@ Este projeto resolve o problema de **digitalização inteligente de notas manusc
 | **Vector DB** | ChromaDB | Busca semântica |
 | **Embeddings** | Sentence Transformers | Indexação multilíngue |
 | **Output** | Markdown + YAML | Compatibilidade Obsidian |
+| **Config** | python-dotenv | Carregamento automático .env |
 | **Automação** | Bash Scripts | Execução agendada |
 
 ## 📋 Requisitos
@@ -118,8 +119,9 @@ chmod +x setup_check.sh run_loop.sh
 
 | Comando | Descrição | Exemplo |
 |---------|-----------|---------|
-| `python src/main.py` | Executa pipeline completo | Processa todas as notas de hoje |
-| `python src/main.py "Label"` | Filtra por label específica | `python src/main.py "Anotações"` |
+| `python -m src.main` | Executa pipeline completo | Processa todas as notas de hoje |
+| `python -m src.main "Label"` | Filtra por label específica | `python -m src.main "Anotações"` |
+| `python scripts/query_interface.py` | Interface de busca ChromaDB | Busca semântica interativa |
 | `./run_loop.sh` | Execução agendada (servidor) | Roda às 01:00 e 04:00 diariamente |
 | `./setup_check.sh` | Verificação do sistema | Diagnóstico completo |
 | `tail -f logs/pipeline.log` | Monitorar logs em tempo real | Ver execução atual |
@@ -131,10 +133,13 @@ chmod +x setup_check.sh run_loop.sh
 source venv/bin/activate
 
 # Execute o pipeline uma vez
-python src/main.py
+python -m src.main
 
 # Execute com filtro de label
-python src/main.py "Estudos"
+python -m src.main "Estudos"
+
+# Use a interface de busca ChromaDB
+python scripts/query_interface.py
 
 # Verificar se tudo está funcionando
 ./setup_check.sh
@@ -171,12 +176,17 @@ ls -la chroma_db/
 
 ```
 📦 ocr-keep-obsidian/
-├── 🚀 src/                          # Módulos principais
+├── 🚀 src/                          # Módulos principais reorganizados
+│   ├── __init__.py                  # 📋 Inicialização do pacote
 │   ├── main.py                      # 🎯 Pipeline central
-│   ├── obsidian_writer.py           # 📝 Gerador Markdown/Obsidian
+│   ├── parser.py                    # 🧠 Parsing LLM estruturado
+│   ├── obsidian_exporter.py         # 📝 Interface de exportação
+│   ├── obsidian_writer.py           # 📝 Gerador Markdown/Obsidian  
+│   ├── ocr_extractor.py             # 📷 Conectividade Keep + OCR
 │   ├── chroma_indexer.py            # 🔍 Indexador ChromaDB
 │   └── README_CHROMA.md             # 📖 Docs ChromaDB
 ├── 🔧 scripts/                      # Scripts auxiliares
+│   ├── query_interface.py           # 🔍 Interface CLI ChromaDB
 │   ├── auto_indexer.py              # 🔄 Indexação automática
 │   └── test_chroma_indexer.py       # 🧪 Testes ChromaDB
 ├── 📷 images/                       # Imagens baixadas
@@ -188,8 +198,6 @@ ls -la chroma_db/
 ├── ⚙️ .env/                         # 🔐 Configurações
 │   └── config                       # 🔑 Credenciais
 ├── 🗃️ archive/                      # 📦 Arquivos legados
-├── 🔧 main.py                       # 🎯 Entry point alternativo
-├── 🔧 ocr_extractor.py              # 📷 Funções Keep + OCR
 ├── 🔧 run_loop.sh                   # ⏰ Execução agendada
 ├── 🔧 setup_check.sh                # ✅ Verificação setup
 ├── 📋 requirements.txt              # 📦 Dependências Python
@@ -223,12 +231,12 @@ graph LR
 
 ### 🎯 Etapas Detalhadas
 
-1. **🔗 Conexão**: Autentica no Google Keep via master token
+1. **🔗 Conexão**: Autentica no Google Keep via master token (com python-dotenv automático)
 2. **🎯 Filtragem**: Busca notas de hoje com imagens (opcionalmente por label)
 3. **📥 Download**: Baixa imagens das notas não processadas anteriormente
 4. **🤖 OCR**: Extrai texto manuscrito usando GPT-4 Vision
-5. **📊 Estruturação**: Organiza conteúdo em JSON padronizado via LLM
-6. **📝 Geração**: Cria arquivos .md compatíveis com Obsidian
+5. **📊 Estruturação**: Organiza conteúdo em JSON padronizado via parser module
+6. **📝 Geração**: Cria arquivos .md compatíveis com Obsidian via obsidian_exporter
 7. **🔍 Indexação**: Gera embeddings e indexa no ChromaDB
 8. **📁 Organização**: Move imagens para pasta `processed/`
 9. **📋 Controle**: Registra operação para evitar duplicatas futuras
@@ -322,18 +330,84 @@ O sistema cria automaticamente:
 
 Para consultas avançadas, veja [README_CHROMA.md](src/README_CHROMA.md).
 
+## 🧩 Módulos do Sistema
+
+### 📦 Módulos Principais (`src/`)
+
+| Módulo | Responsabilidade | Principais Funções |
+|--------|------------------|-------------------|
+| **`main.py`** | 🎯 Pipeline central | Orquestração do fluxo completo |
+| **`parser.py`** | 🧠 Parsing LLM | `parse_ocr_text()` - estruturação JSON |
+| **`obsidian_exporter.py`** | 📝 Exportação | `convert_to_md()` - interface unificada |
+| **`ocr_extractor.py`** | 📷 OCR + Keep | Conectividade e extração de imagens |
+| **`obsidian_writer.py`** | 📄 Formatação | Geração de arquivos Markdown |
+| **`chroma_indexer.py`** | 🔍 Vector DB | Indexação e busca semântica |
+
+### 🔧 Scripts Auxiliares (`scripts/`)
+
+| Script | Função | Como Usar |
+|--------|--------|-----------|
+| **`query_interface.py`** | 🔍 Busca ChromaDB | `python scripts/query_interface.py` |
+| **`auto_indexer.py`** | 🔄 Indexação batch | Re-indexação de arquivos existentes |
+| **`test_chroma_indexer.py`** | 🧪 Testes | Validação do ChromaDB |
+
+### 💡 Benefícios da Reorganização
+
+- **🎯 Separação de responsabilidades**: Cada módulo tem função específica
+- **🔧 Manutenibilidade**: Código mais fácil de manter e debug
+- **🧪 Testabilidade**: Módulos independentes facilitam testes
+- **🔄 Reutilização**: Funções podem ser importadas individualmente
+- **📦 Estrutura de pacote**: Import paths mais limpos e organizados
+- **⚡ Performance**: Carregamento otimizado de dependências
+
 ## 🔍 Exemplo de Saída Completa
 
 ### 🎯 Busca Semântica no ChromaDB
 
 ```python
-# Exemplo de busca no ChromaDB
+# Exemplo de busca no ChromaDB usando interface
+python scripts/query_interface.py
+
+# Ou programaticamente
 from src.chroma_indexer import ChromaIndexer
 
 indexer = ChromaIndexer()
 results = indexer.query_similar_notes("reunião cliente", n_results=3)
 
 # Retorna notas similares com scores de similaridade
+```
+
+**Interface CLI de Busca:**
+```bash
+# Busca interativa
+python scripts/query_interface.py
+
+# Busca direta
+python scripts/query_interface.py -q "planejamento semanal"
+
+# Ver estatísticas
+python scripts/query_interface.py --stats
+
+# Listar todas as notas
+python scripts/query_interface.py --list
+```
+
+**Uso dos módulos reorganizados:**
+```python
+# Importar módulos específicos
+from src.parser import parse_ocr_text
+from src.obsidian_exporter import convert_to_md
+from src.chroma_indexer import ChromaIndexer
+
+# Usar parser independentemente
+structured_data = parse_ocr_text("texto manuscrito extraído")
+
+# Converter para Obsidian
+markdown_file = convert_to_md(structured_data, output_dir="./notas")
+
+# Buscar no ChromaDB
+indexer = ChromaIndexer()
+results = indexer.query_similar_notes("reunião", n_results=5)
 ```
 
 ### 📊 Estrutura JSON Completa
@@ -423,25 +497,28 @@ tail -50 logs/pipeline.log
 
 # 🐍 Verificar ambiente Python
 python --version
-pip list | grep -E "(openai|gkeepapi|chromadb)"
+pip list | grep -E "(openai|gkeepapi|chromadb|python-dotenv)"
 
 # 📁 Verificar permissões de diretórios
 ls -la obsidian_notes/ chroma_db/ logs/
 
 # 🔐 Verificar arquivo de configuração
 cat .env/config | grep -v TOKEN  # Mostra config sem expor tokens
+
+# 🔍 Testar interface de busca
+python scripts/query_interface.py --stats
 ```
 
 ### 🆘 Debug Modo Verbose
 
 ```bash
 # Executar com logs detalhados
-python src/main.py --verbose
+python -m src.main --verbose
 
 # Ou habilitar debug no código
 export PYTHONPATH=.
 export DEBUG=1
-python src/main.py
+python -m src.main
 ```
 
 ### 📞 Suporte
@@ -460,12 +537,14 @@ python src/main.py
 - [ ] **📱 App Mobile**: Companion app para captura direta
 - [ ] **🔄 Sync Bidireccional**: Obsidian → Keep para edições
 - [ ] **🎨 Themes Obsidian**: Templates customizáveis para diferentes tipos de nota
+- [ ] **🔍 Busca Avançada**: Melhorias na interface de busca semântica
 
 ### 🚀 Planejado (v2.2.0)
 - [ ] **🤖 Auto-categorização**: IA para classificação automática de notas
 - [ ] **📊 Analytics**: Dashboard com estatísticas de produtividade
 - [ ] **🔗 Integrações**: Notion, Anki, Logseq
 - [ ] **🌍 Multi-idiomas**: Suporte completo a idiomas não-latinos
+- [ ] **⚡ Performance**: Otimizações no pipeline de processamento
 
 ### 💡 Ideias Futuras
 - [ ] **🧠 Knowledge Graph**: Visualização de conexões entre notas
@@ -489,25 +568,6 @@ python src/main.py
 4. 📤 Push para a branch (`git push origin feature/AmazingFeature`)
 5. 🔃 Abra um Pull Request
 
-## 📈 Changelog
-
-### 🚀 v2.0.0 (29/05/2025) - Major Release
-- ✨ **Execução agendada** automática para servidores
-- ✨ **Caminhos configuráveis** via .env (OBS_PATH, CHROMA_DB_PATH)  
-- ✨ **Sistema de logs** robusto com timestamps
-- ✨ **Setup automático** com verificação de dependências
-- ✨ **Deploy universal** compatível com Linux/macOS
-- ✨ **Criação automática** de diretórios inexistentes
-- ✨ **Suporte ~** (home directory) em caminhos
-- ✨ **Prevenção múltiplas execuções** no mesmo horário
-- 🔒 **Segurança melhorada** com permissões restritivas para .env
-
-### 📝 v1.0.0 (28/05/2025) - Initial Release
-- 🎉 Pipeline completo funcional
-- 🔗 Integração Google Keep + GPT-4 Vision + Obsidian + ChromaDB
-- 🔄 Sistema de controle de duplicatas
-- 🏷️ Filtragem por labels/tags
-- 📚 Documentação completa inicial
 
 ## 📄 Licença
 

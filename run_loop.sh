@@ -56,7 +56,7 @@ run_pipeline() {
     log_message "🔄 Executando pipeline..."
     
     # Executar o pipeline principal
-    python src/main.py >> logs/pipeline.log 2>&1
+    python -m src.main >> logs/pipeline.log 2>&1
     exit_code=$?
     
     if [ $exit_code -eq 0 ]; then
