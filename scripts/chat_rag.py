@@ -46,7 +46,19 @@ class ChatRAG:
         self.setup_openai()
         self.setup_indexer() 
         self.setup_history()
+        self.setup_config()
         self.conversation_history = []
+        
+    def setup_config(self):
+        """Carrega configurações do sistema"""
+        try:
+            config = load_keep_credentials()
+            # Configuração de chunks RAG
+            self.rag_chunk_count = int(config.get('RAG_CHUNK_COUNT', 5))
+            print(f"⚙️ Configuração RAG: {self.rag_chunk_count} chunks por consulta")
+        except (ValueError, TypeError) as e:
+            print(f"⚠️ Erro na configuração RAG_CHUNK_COUNT, usando padrão (5): {e}")
+            self.rag_chunk_count = 5
         
     def setup_openai(self):
         """Configura cliente OpenAI"""
@@ -124,19 +136,23 @@ class ChatRAG:
         except Exception:
             pass  # Ignorar erros de histórico
     
-    def search_context(self, query: str, n_results: int = 5) -> str:
+    def search_context(self, query: str, n_results: int = None) -> str:
         """
         Busca contexto relevante no ChromaDB
         
         Args:
             query (str): Consulta do usuário
-            n_results (int): Número de resultados a buscar
+            n_results (int): Número de resultados a buscar (usa configuração se None)
             
         Returns:
             str: Contexto formatado para RAG
         """
         try:
-            print(f"🔍 Buscando contexto relevante...")
+            # Usar configuração se não especificado
+            if n_results is None:
+                n_results = self.rag_chunk_count
+                
+            print(f"🔍 Buscando contexto relevante ({n_results} chunks)...")
             
             # Buscar notas similares
             results = self.indexer.search_similar_notes(query, n_results=n_results)
@@ -258,6 +274,7 @@ RESPOSTA BASEADA NAS SUAS ANOTAÇÕES:"""
             print("\n📊 ESTATÍSTICAS DO SISTEMA RAG:")
             print(f"   📄 Notas indexadas: {db_stats.get('total_notes', 0)}")
             print(f"   💬 Perguntas nesta sessão: {len(self.conversation_history)}")
+            print(f"   🔍 Chunks por consulta: {self.rag_chunk_count}")
             print(f"   💾 Banco de dados: {self.indexer.persist_directory}")
             print(f"   🤖 Modelo LLM: GPT-4")
             print()
@@ -332,8 +349,8 @@ RESPOSTA BASEADA NAS SUAS ANOTAÇÕES:"""
             query (str): Pergunta do usuário
         """
         try:
-            # Buscar contexto
-            context = self.search_context(query, n_results=5)
+            # Buscar contexto usando configuração
+            context = self.search_context(query)
             
             # Gerar resposta
             response = self.generate_response(query, context)
