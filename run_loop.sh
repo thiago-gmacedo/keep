@@ -1,6 +1,7 @@
 #!/bin/bash
 # Script de execução programada do pipeline OCR Keep
 # Executa diariamente às 1h e 4h da manhã
+# Processa apenas notas com a label "Anotações diárias"
 
 # Diretório do projeto
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -45,6 +46,7 @@ next_execution_time() {
 
 log_message "🚀 Iniciando execução agendada do pipeline OCR Keep"
 log_message "📁 Diretório: $SCRIPT_DIR"
+log_message "🏷️ Filtro de label: 'Anotações diárias'"
 log_message "⏰ Horários de execução: 01:00 e 04:00 (diariamente)"
 log_message "🔄 Próxima execução: $(next_execution_time)"
 
@@ -55,8 +57,8 @@ trap 'log_message "🛑 Execução agendada interrompida pelo usuário"; exit 0'
 run_pipeline() {
     log_message "🔄 Executando pipeline..."
     
-    # Executar o pipeline principal
-    python -m src.main >> logs/pipeline.log 2>&1
+    # Executar o pipeline principal com label 'Anotações diárias'
+    python -m src.main "Anotações diárias" >> logs/pipeline.log 2>&1
     exit_code=$?
     
     if [ $exit_code -eq 0 ]; then
