@@ -184,7 +184,8 @@ if [ -f ".env/config" ] && grep -q "sk-" ".env/config" && grep -q "@" ".env/conf
     echo -e "\n📖 Para executar:"
     echo "   • Pipeline único: python -m src.main"
     echo "   • Execução contínua: ./run_loop.sh"
-    echo "   • Teste de busca: python teste.py"
+    echo "   • Busca ChromaDB: python scripts/query_interface.py"
+    echo "   • 🧹 Limpar dados: python clear_data.py"
 else
     log_warn "Configuração incompleta"
     echo -e "\n📝 ${YELLOW}PRÓXIMOS PASSOS:${NC}"

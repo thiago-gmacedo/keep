@@ -122,6 +122,7 @@ chmod +x setup_check.sh run_loop.sh
 | `python -m src.main` | Executa pipeline completo | Processa todas as notas de hoje |
 | `python -m src.main "Label"` | Filtra por label específica | `python -m src.main "Anotações"` |
 | `python scripts/query_interface.py` | Interface de busca ChromaDB | Busca semântica interativa |
+| `python clear_data.py` | **🧹 Limpar todos os dados** | **Remove ChromaDB, Obsidian, logs** |
 | `./run_loop.sh` | Execução agendada (servidor) | Roda às 01:00 e 04:00 diariamente |
 | `./setup_check.sh` | Verificação do sistema | Diagnóstico completo |
 | `tail -f logs/pipeline.log` | Monitorar logs em tempo real | Ver execução atual |
@@ -168,6 +169,26 @@ tail -20 logs/pipeline.log
 ./setup_check.sh
 
 # Ver arquivos gerados
+ls -la obsidian_notes/
+ls -la chroma_db/
+```
+
+### 🧹 Limpeza e Reset
+
+```bash
+# ⚠️ LIMPAR TODOS OS DADOS (irreversível)
+python clear_data.py
+
+# Ver o que será removido
+python clear_data.py --help
+
+# Remove:
+# • ChromaDB (banco vetorial)
+# • Arquivos Obsidian (.md)
+# • Imagens processadas
+# • Logs do sistema
+# • Histórico de processamento
+```
 ls -la obsidian_notes/
 ls -la chroma_db/
 ```
