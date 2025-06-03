@@ -43,12 +43,16 @@ sys.path.insert(0, str(ROOT_DIR))
 SRC_DIR = Path(__file__).parent
 sys.path.insert(0, str(SRC_DIR))
 
+# Criar diretórios necessários antes do logging
+LOGS_DIR = ROOT_DIR / 'logs'
+LOGS_DIR.mkdir(exist_ok=True)
+
 # Configurar logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler(ROOT_DIR / 'logs' / 'pipeline.log'),
+        logging.FileHandler(LOGS_DIR / 'pipeline.log'),
         logging.StreamHandler()
     ]
 )
