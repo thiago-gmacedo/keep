@@ -33,7 +33,7 @@ except ImportError:
         print("⚠️ Aviso: ChromaIndexer não encontrado. A indexação semântica não estará disponível.")
 
 MODEL_NAME = "gpt-4o"  # modelo atual com suporte a visão
-IMAGE_DIR = Path(__file__).parent.parent / "image"  # Diretório para salvar imagens (raiz do projeto)
+IMAGE_DIR = Path(__file__).parent.parent / "images"  # Diretório para salvar imagens (raiz do projeto)
 PROCESSED_NOTES_FILE = Path(__file__).parent.parent / ".processed_notes.json"  # Arquivo para registro de notas processadas
 
 # Flag para controlar a indexação no ChromaDB
@@ -200,7 +200,7 @@ def main():
     # Verificar argumentos
     if len(sys.argv) == 1:
         # Modo local - usar a imagem padrão
-        img_path = Path(__file__).parent / "image" / "ink.png"
+        img_path = Path(__file__).parent / "images" / "ink.png"
         print(f"🖼️ Modo Local: Usando imagem padrão: {img_path}")
         process_single_image(str(img_path))
     elif len(sys.argv) == 2 and sys.argv[1] == "--help":

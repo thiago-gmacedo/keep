@@ -36,7 +36,7 @@ def test_indexing_with_real_files():
     )
     
     # Diretório com arquivos JSON para teste
-    json_dir = ROOT_DIR / "image"
+    json_dir = ROOT_DIR / "images"
     
     # Encontrar todos os arquivos JSON no diretório
     json_files = list(json_dir.glob("*.json"))
@@ -118,7 +118,7 @@ def test_convenience_function():
     print("\n🧪 Testando função de conveniência index_note_in_chroma...")
     
     # Carregar um arquivo JSON de exemplo
-    json_dir = ROOT_DIR / "image"
+    json_dir = ROOT_DIR / "images"
     json_files = list(json_dir.glob("*.json"))
     
     if not json_files:
