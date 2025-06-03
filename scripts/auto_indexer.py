@@ -2,7 +2,7 @@
 """
 Auto Indexador - Monitora a pasta de imagens e indexa automaticamente novos JSONs no ChromaDB
 
-Este script monitora a pasta 'image' por novos arquivos JSON gerados pelo OCR
+Este script monitora a pasta 'images' por novos arquivos JSON gerados pelo OCR
 e os indexa automaticamente no ChromaDB.
 """
 
@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 def setup():
     """Configura o ambiente e verifica dependências"""
     # Verificar se o diretório de imagens existe
-    image_dir = ROOT_DIR / "image"
+    image_dir = ROOT_DIR / "images"
     if not image_dir.exists():
         logger.error(f"❌ Diretório de imagens não encontrado: {image_dir}")
         sys.exit(1)

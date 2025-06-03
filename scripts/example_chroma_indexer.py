@@ -24,7 +24,7 @@ def main():
     print("=" * 50)
     
     # Exemplo 1: Carregar e indexar um arquivo JSON usando a função de conveniência
-    json_dir = ROOT_DIR / "image"
+    json_dir = ROOT_DIR / "images"
     json_files = list(json_dir.glob("*.json"))
     
     if not json_files:

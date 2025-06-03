@@ -9,7 +9,6 @@ env/
 
 # Diretórios de dados processados
 images/
-image/
 obsidian_notes/**/*.md
 vault/
 
