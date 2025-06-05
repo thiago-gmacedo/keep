@@ -33,7 +33,7 @@ except ImportError:
         print("⚠️ Aviso: ChromaIndexer não encontrado. A indexação semântica não estará disponível.")
 
 MODEL_NAME = "gpt-4o"  # modelo atual com suporte a visão
-IMAGE_DIR = Path(__file__).parent.parent / "images"  # Diretório para salvar imagens (raiz do projeto)
+IMAGE_DIR = Path(__file__).parent.parent / "image"  # Diretório para salvar imagens (raiz do projeto)
 PROCESSED_NOTES_FILE = Path(__file__).parent.parent / ".processed_notes.json"  # Arquivo para registro de notas processadas
 
 # Flag para controlar a indexação no ChromaDB
@@ -110,7 +110,7 @@ def transcribe_handwriting(image_path: str) -> str:
                                 "caso alguma parte fique ilegivel, use a logica para completar a lacuna."
                                 "Todo a imagem virá dividida em blocos de texto, tarefas, notas e lembretes."
                                 "Organize o seguinte texto OCR em formato JSON com os campos:"
-                                "title (se houver, ou o dia neste formato dia/mes/ano - segunda-feira(dia da semana)),"
+                                "title (Nota Diária)"
                                 "Todas as partes devem vir encaixadas em algum dos campos definidos" 
                                 "data (data encontrada no texto ou deixe vazio),"
                                 "summary (resuma o conteúdo em uma frase),"
@@ -200,7 +200,7 @@ def main():
     # Verificar argumentos
     if len(sys.argv) == 1:
         # Modo local - usar a imagem padrão
-        img_path = Path(__file__).parent / "images" / "ink.png"
+        img_path = Path(__file__).parent / "image" / "ink.png"
         print(f"🖼️ Modo Local: Usando imagem padrão: {img_path}")
         process_single_image(str(img_path))
     elif len(sys.argv) == 2 and sys.argv[1] == "--help":
@@ -319,17 +319,9 @@ def save_keep_credentials(email, master_token=None):
         print(f"Aviso: Não foi possível salvar o arquivo de configuração: {e}")
 
 
-def download_blob(blob, note_title, index, keep_instance=None):
+def download_blob(blob, note_title, index):
     """Baixa qualquer tipo de blob (anexo) de uma nota do Google Keep com método simplificado"""
-    # Se não foi passado keep_instance, tenta usar a variável global
-    if keep_instance is None:
-        # Tenta importar e usar variável global se disponível
-        try:
-            global keep
-            keep_instance = keep
-        except NameError:
-            print("❌ Instância do Google Keep não disponível")
-            return None
+    global keep
     
     # Criar diretório se não existir
     if not IMAGE_DIR.exists():
@@ -366,7 +358,7 @@ def download_blob(blob, note_title, index, keep_instance=None):
     # Estratégia 1: Usar getMediaLink (método oficial e preferido)
     try:
         print("🔄 Tentando download via getMediaLink (método principal)...")
-        media_url = keep_instance.getMediaLink(blob)
+        media_url = keep.getMediaLink(blob)
         if media_url:
             response = requests.get(media_url)
             if response.status_code == 200:
@@ -511,7 +503,7 @@ def process_keep_notes(label_name):
                     # Abordagem simplificada: tentar baixar o anexo
                     try:
                         print("🔄 Baixando anexo...")
-                        img_path = download_blob(blob, note.title or "sem_titulo", i, keep)
+                        img_path = download_blob(blob, note.title or "sem_titulo", i)
                         if img_path:
                             print(f"💾 Anexo salvo em: {img_path}")
                         else:
