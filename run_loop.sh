@@ -21,7 +21,7 @@ is_execution_time() {
     current_minute=$(date '+%M')
     
     # Executar às 1:00 ou 4:00 (janela de 5 minutos: 00-04)
-    if [[ "$current_hour" == "20" && "$current_minute" == "45" ]]; then
+    if [[ "$current_hour" == "02" && "$current_minute" == "45" ]]; then
         return 0  # É hora de executar
     else
         return 1  # Não é hora de executar
