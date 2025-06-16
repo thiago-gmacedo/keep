@@ -23,7 +23,7 @@ import json
 import shutil
 import logging
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Dict, Any, Optional
 
 # Carregar variáveis de ambiente
@@ -215,10 +215,8 @@ def get_new_notes_with_images(keep, label_name: Optional[str] = None) -> List[An
     Returns:
         Lista de notas de hoje não processadas com anexos de imagem
     """
-    from datetime import timezone
-    
-    # Data atual (UTC) - filtra apenas notas de hoje
-    hoje = datetime.now(timezone.utc).date()
+    # Data atual (timezone local do sistema)
+    hoje = datetime.now().date()
     print(f"🔍 Buscando notas de HOJE ({hoje.strftime('%d/%m/%Y')}) com imagens não processadas...")
     
     try:
@@ -235,8 +233,13 @@ def get_new_notes_with_images(keep, label_name: Optional[str] = None) -> List[An
         
         print(f"📊 Total de notas encontradas: {len(notes)}")
         
-        # Filtrar notas de HOJE
-        notes_today = [note for note in notes if note.timestamps.updated.date() == hoje]
+        # Filtrar notas de HOJE (convertendo timestamps UTC para timezone local)
+        notes_today = []
+        for note in notes:
+            # Converter timestamp UTC para local
+            note_date_local = note.timestamps.updated.replace(tzinfo=timezone.utc).astimezone().date()
+            if note_date_local == hoje:
+                notes_today.append(note)
         print(f"📅 Notas de hoje: {len(notes_today)}")
         
         # Filtrar notas com anexos

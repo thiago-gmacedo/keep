@@ -430,8 +430,8 @@ def process_keep_notes(label_name):
     print("3. Processar apenas notas novas (não processadas anteriormente)")
     escolha = input("\nSua escolha [1/2/3]: ").strip()
     
-    # Data atual (UTC)
-    hoje = datetime.now(timezone.utc).date()
+    # Data atual (timezone local do sistema)
+    hoje = datetime.now().date()
     if escolha == "2":
         print(f"🔍 Buscando todas as notas com a label '{label_name}'...")
     elif escolha == "3":
@@ -450,8 +450,12 @@ def process_keep_notes(label_name):
     
     # Filtrar notas conforme a escolha
     if escolha == "1":
-        # Apenas notas de hoje
-        notes_to_process = [note for note in notes_with_label if note.timestamps.updated.date() == hoje]
+        # Apenas notas de hoje (convertendo timestamps UTC para timezone local)
+        notes_to_process = []
+        for note in notes_with_label:
+            note_date_local = note.timestamps.updated.replace(tzinfo=timezone.utc).astimezone().date()
+            if note_date_local == hoje:
+                notes_to_process.append(note)
     elif escolha == "3":
         # Apenas notas não processadas anteriormente
         notes_to_process = [note for note in notes_with_label 

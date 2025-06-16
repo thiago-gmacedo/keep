@@ -1,6 +1,6 @@
 #!/bin/bash
 # Script de execução programada do pipeline OCR Keep
-# Executa diariamente às 1h e 4h da manhã
+# Executa diariamente às 23:45
 # Processa apenas notas com a label "Anotações diárias"
 
 # Diretório do projeto
@@ -15,13 +15,13 @@ log_message() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" | tee -a logs/pipeline.log
 }
 
-# Função para verificar se é hora de executar (1h ou 4h da manhã)
+# Função para verificar se é hora de executar (23:45)
 is_execution_time() {
     current_hour=$(date '+%H')
     current_minute=$(date '+%M')
     
-    # Executar às 1:00 ou 4:00 (janela de 5 minutos: 00-04)
-    if [[ "$current_hour" == "02" && "$current_minute" == "45" ]]; then
+    # Executar às 23:45 (janela de 5 minutos: 45-49)
+    if [[ "$current_hour" == "23" && "$current_minute" -ge "45" && "$current_minute" -le "49" ]]; then
         return 0  # É hora de executar
     else
         return 1  # Não é hora de executar
@@ -33,21 +33,19 @@ next_execution_time() {
     current_hour=$(date '+%H')
     current_minute=$(date '+%M')
     
-    if [[ "$current_hour" -lt "01" ]]; then
-        echo "hoje às 01:00"
-    elif [[ "$current_hour" -eq "01" && "$current_minute" -ge "05" ]] || [[ "$current_hour" -gt "01" && "$current_hour" -lt "04" ]]; then
-        echo "hoje às 04:00"
-    elif [[ "$current_hour" -eq "04" && "$current_minute" -ge "05" ]] || [[ "$current_hour" -gt "04" ]]; then
-        echo "amanhã às 01:00"
+    if [[ "$current_hour" -lt "23" ]]; then
+        echo "hoje às 23:45"
+    elif [[ "$current_hour" -eq "23" && "$current_minute" -lt "45" ]]; then
+        echo "hoje às 23:45"
     else
-        echo "hoje às $(date '+%H'):$(date '+%M')"
+        echo "amanhã às 23:45"
     fi
 }
 
 log_message "🚀 Iniciando execução agendada do pipeline OCR Keep"
 log_message "📁 Diretório: $SCRIPT_DIR"
 log_message "🏷️ Filtro de label: 'Anotações diárias'"
-log_message "⏰ Horários de execução: 01:00 e 04:00 (diariamente)"
+log_message "⏰ Horários de execução: 23:45 (diariamente)"
 log_message "🔄 Próxima execução: $(next_execution_time)"
 
 # Trap para capturar sinais e parar graciosamente
