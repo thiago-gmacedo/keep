@@ -319,9 +319,14 @@ def save_keep_credentials(email, master_token=None):
         print(f"Aviso: Não foi possível salvar o arquivo de configuração: {e}")
 
 
-def download_blob(blob, note_title, index):
+def download_blob(blob, note_title, index, keep_instance=None):
     """Baixa qualquer tipo de blob (anexo) de uma nota do Google Keep com método simplificado"""
-    global keep
+    # Usar o keep_instance passado ou a variável global
+    if keep_instance:
+        keep_client = keep_instance
+    else:
+        global keep
+        keep_client = keep
     
     # Criar diretório se não existir
     if not IMAGE_DIR.exists():
@@ -358,7 +363,7 @@ def download_blob(blob, note_title, index):
     # Estratégia 1: Usar getMediaLink (método oficial e preferido)
     try:
         print("🔄 Tentando download via getMediaLink (método principal)...")
-        media_url = keep.getMediaLink(blob)
+        media_url = keep_client.getMediaLink(blob)
         if media_url:
             response = requests.get(media_url)
             if response.status_code == 200:
