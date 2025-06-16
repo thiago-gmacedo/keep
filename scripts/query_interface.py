@@ -225,7 +225,7 @@ class QueryInterface:
             print(f"❌ Erro ao buscar notas recentes: {e}")
     
     def list_all_notes(self):
-        """Lista todas as notas disponíveis"""
+        """Lista todas as notas disponíveis com informações detalhadas"""
         try:
             # Buscar com termo muito genérico para pegar todas
             results = self.indexer.search_similar_notes("", n_results=100)
@@ -235,17 +235,115 @@ class QueryInterface:
                 return
             
             print(f"\n📋 TODAS AS NOTAS ({len(results)} encontradas):")
-            for i, result in enumerate(results, 1):
+            print("=" * 95)
+            
+            # Agrupar por data para melhor organização
+            notes_by_date = {}
+            for result in results:
                 metadata = result.get('metadata', {})
-                title = metadata.get('title', 'Sem título')
                 date = metadata.get('data', 'Sem data')
-                summary = metadata.get('summary', '')
+                if date not in notes_by_date:
+                    notes_by_date[date] = []
+                notes_by_date[date].append(result)
+            
+            # Ordenar datas (mais recente primeiro)
+            sorted_dates = sorted(notes_by_date.keys(), reverse=True)
+            
+            # Contadores globais
+            total_notes = len(results)
+            total_tasks_all = 0
+            total_done_all = 0
+            total_notes_content = 0
+            total_reminders_all = 0
+            
+            for date in sorted_dates:
+                print(f"\n📅 {date}")
+                print("-" * 55)
                 
-                # Limitar tamanho do resumo
-                if len(summary) > 50:
-                    summary = summary[:47] + "..."
+                for i, result in enumerate(notes_by_date[date], 1):
+                    metadata = result.get('metadata', {})
+                    title = metadata.get('title', 'Sem título')
+                    summary = metadata.get('summary', '')
+                    keywords = metadata.get('keywords', '')
+                    
+                    # Informações de tarefas
+                    total_tasks = metadata.get('total_tasks', 0)
+                    done_tasks = metadata.get('done_tasks', 0)
+                    todo_tasks = metadata.get('todo_tasks', 0)
+                    
+                    # Contadores
+                    notes_count = metadata.get('notes_count', 0)
+                    reminders_count = metadata.get('reminders_count', 0)
+                    
+                    # Atualizar contadores globais
+                    total_tasks_all += total_tasks
+                    total_done_all += done_tasks
+                    total_notes_content += notes_count
+                    total_reminders_all += reminders_count
+                    
+                    # Truncar dados longos para exibição
+                    display_title = title[:32] + "..." if len(title) > 35 else title
+                    display_summary = summary[:45] + "..." if len(summary) > 48 else summary
+                    display_keywords = keywords[:40] + "..." if len(keywords) > 43 else keywords
+                    
+                    # Linha principal com título
+                    print(f"   {i:2d}. 📝 {display_title:<35}")
+                    
+                    # Segunda linha com resumo (se disponível)
+                    if summary:
+                        print(f"       💭 {display_summary}")
+                    
+                    # Terceira linha com estatísticas detalhadas
+                    stats = []
+                    
+                    # Tarefas com indicador visual
+                    if total_tasks > 0:
+                        progress = done_tasks / total_tasks
+                        if progress == 1.0:
+                            task_indicator = "🟢"
+                        elif progress >= 0.5:
+                            task_indicator = "🟡"
+                        else:
+                            task_indicator = "🔴"
+                        stats.append(f"{task_indicator} {done_tasks}/{total_tasks} tarefas")
+                    
+                    # Conteúdo adicional
+                    if notes_count > 0:
+                        stats.append(f"📓 {notes_count} notas")
+                    if reminders_count > 0:
+                        stats.append(f"⏰ {reminders_count} lembretes")
+                    
+                    # Tags/palavras-chave
+                    if keywords:
+                        stats.append(f"🏷️ {display_keywords}")
+                    
+                    if stats:
+                        print(f"       📊 {' | '.join(stats)}")
+                    
+                    # Espaço entre notas da mesma data
+                    if i < len(notes_by_date[date]):
+                        print()
                 
-                print(f"   {i:2d}. {title:<25} | {date:<12} | {summary}")
+                # Espaço entre datas diferentes
+                print()
+            
+            # Resumo final expandido
+            print("=" * 95)
+            
+            # Calcular percentual de conclusão de tarefas
+            completion_rate = (total_done_all / total_tasks_all * 100) if total_tasks_all > 0 else 0
+            
+            print(f"📊 ESTATÍSTICAS GERAIS:")
+            print(f"   📄 Total de notas: {total_notes}")
+            print(f"   ✅ Tarefas concluídas: {total_done_all}/{total_tasks_all} ({completion_rate:.1f}%)")
+            print(f"   📓 Anotações de conteúdo: {total_notes_content}")
+            print(f"   ⏰ Lembretes ativos: {total_reminders_all}")
+            print(f"   📅 Período: {len(sorted_dates)} datas diferentes")
+            
+            print("\n💡 DICAS:")
+            print("   • Digite números 1-9 após uma busca para ver conteúdo completo")
+            print("   • Use /recent para ver apenas as notas mais recentes")
+            print("   • Use termos de busca para encontrar notas específicas")
             print()
             
         except Exception as e:
