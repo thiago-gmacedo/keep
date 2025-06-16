@@ -45,3 +45,5 @@ archive/
 .DS_Store
 Thumbs.db
 
+# Historico de mensagens RAG
+.chat_rag_history
