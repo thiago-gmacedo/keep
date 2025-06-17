@@ -36,6 +36,10 @@ RUN npm install --production
 # Copiar código da aplicação
 COPY . .
 
+# Criar diretório de sessões e ajustar permissões
+RUN mkdir -p sessions && \
+    chown -R 1001:1001 sessions
+
 # Criar usuário não-root para segurança
 RUN groupadd -g 1001 appgroup && \
     useradd -r -u 1001 -g appgroup appuser && \
