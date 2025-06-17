@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  python_pipeline:
+    build: 
+      context: .
+      dockerfile: Dockerfile.python
+    container_name: keep-python-pipeline
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./chroma_db:/app/chroma_db
+      - ./obsidian_notes:/app/obsidian_notes
+      - ./logs:/app/logs
+      - ./.env:/app/.env
+    environment:
+      - PYTHONPATH=/app
+      - CHROMA_DB_PATH=/app/chroma_db
+      - OBSIDIAN_PATH=/app/obsidian_notes
+    restart: unless-stopped
+    command: python src/web_server.py
+
+  wa_bot:
+    build: ./wa_bot
+    container_name: keep-whatsapp-bot
+    depends_on:
+      - python_pipeline
+    volumes:
+      - ./wa_bot/sessions:/app/wa_bot/sessions
+    environment:
+      - PIPELINE_URL=http://python_pipeline:8000
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
+
+networks:
+  default:
+    name: keep-network

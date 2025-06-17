@@ -1,0 +1,21 @@
+{
+  "name": "wa-bot-keep-query",
+  "version": "1.0.0",
+  "description": "WhatsApp bot para consultas ao pipeline OCR Keep",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node index.js"
+  },
+  "keywords": ["whatsapp", "bot", "ocr", "keep", "rag"],
+  "author": "Keep OCR Pipeline",
+  "license": "MIT",
+  "dependencies": {
+    "whatsapp-web.js": "^1.23.0",
+    "node-fetch": "^3.3.2",
+    "qrcode-terminal": "^0.12.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

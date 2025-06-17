@@ -3,6 +3,11 @@
 *.log
 logs/
 
+# WhatsApp Bot - sessões e cache
+wa_bot/sessions/*
+wa_bot/.wwebjs_cache/
+wa_bot/node_modules/
+
 # Ambientes virtuais
 venv/
 env/
@@ -47,3 +52,6 @@ Thumbs.db
 
 # Historico de mensagens RAG
 .chat_rag_history
+
+# Arquivos de imagens de teste
+image/
