@@ -5,6 +5,8 @@
 openai>=1.0.0
 gkeepapi==0.14.2
 requests>=2.28.0
+fastapi>=0.104.0
+uvicorn>=0.24.0
 
 # Processamento de Imagem
 pillow>=9.0.0
