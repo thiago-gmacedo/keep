@@ -15,13 +15,13 @@ log_message() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" | tee -a logs/pipeline.log
 }
 
-# Função para verificar se é hora de executar (02:45)
+# Função para verificar se é hora de executar (23:45)
 is_execution_time() {
     current_hour=$(date '+%H')
     current_minute=$(date '+%M')
     
-    # Executar às 02:45 (janela de 5 minutos: 45-49)
-    if [[ "$current_hour" == "02" && "$current_minute" -ge "45" && "$current_minute" -le "49" ]]; then
+    # Executar às 23:45 (janela de 5 minutos: 45-49)
+    if [[ "$current_hour" == "23" && "$current_minute" -ge "45" && "$current_minute" -le "49" ]]; then
         return 0  # É hora de executar
     else
         return 1  # Não é hora de executar
