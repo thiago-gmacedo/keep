@@ -22,7 +22,7 @@ echo "🐳 Usando: $DOCKER_COMPOSE"
 echo "🛑 Parando serviços antigos..."
 pkill -f "run_loop.sh" 2>/dev/null || true
 pkill -f "python.*main.py" 2>/dev/null || true
-sudo systemctl stop keep-pipeline 2>/dev/null || true
+sudo systemctl stop keep 2>/dev/null || true
 
 # Parar containers antigos
 echo "🐳 Parando containers Docker antigos..."
