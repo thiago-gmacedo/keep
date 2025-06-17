@@ -1,5 +1,23 @@
 # Server Setup Guide
 
+## Deploy Completo com Docker
+
+O sistema Keep OCR agora roda completamente em Docker com 3 serviços:
+- **Web Server**: API REST para consultas (porta 8000)
+- **Pipeline Scheduler**: Executa pipeline às 23:45 diariamente
+- **WhatsApp Bot**: Bot para consultas via WhatsApp
+
+### Deploy Automático
+
+```bash
+# Clone e acesse o projeto
+git clone <repo> && cd keep
+git checkout feat/wa-bot
+
+# Deploy completo
+./deploy.sh
+```
+
 ## Bot WhatsApp
 
 O bot WhatsApp permite fazer consultas ao pipeline OCR Keep através de mensagens que começam com `!`.
@@ -28,27 +46,46 @@ ls -la wa_bot/sessions/
 
 #### 2. Deploy no Servidor
 
-1. **Copie o diretório de sessões** para o servidor:
+1. **Execute o deploy automático**:
 
 ```bash
-# Do local para o servidor
-scp -r wa_bot/sessions/ user@servidor:/caminho/para/keep/wa_bot/
+./deploy.sh
 ```
 
-2. **Inicie os containers** no servidor:
+2. **Configure WhatsApp (primeira vez)**:
 
 ```bash
-# No servidor
-docker compose up -d wa_bot
+# Ver logs do bot para QR code
+docker-compose logs -f wa_bot
+
+# Aguarde o QR aparecer nos logs, escaneie com WhatsApp
+# O bot será autenticado automaticamente
 ```
 
-3. **Verifique os logs**:
+3. **Verificar status**:
 
 ```bash
-docker compose logs -f wa_bot
+docker-compose ps
+curl http://localhost:8000/health
 ```
 
-Você deve ver a mensagem "🔐 Autenticado com sucesso!" seguida de "✅ WhatsApp Web está pronto!".
+### Monitoramento
+
+```bash
+# Ver todos os logs
+docker-compose logs -f
+
+# Ver logs específicos
+docker-compose logs -f wa_bot          # Bot WhatsApp
+docker-compose logs -f web_server      # API REST
+docker-compose logs -f pipeline_scheduler  # Scheduler
+
+# Verificar status dos containers
+docker-compose ps
+
+# Testar API
+curl "http://localhost:8000/query?text=listar tarefas"
+```
 
 ### Uso
 
@@ -58,49 +95,47 @@ Envie mensagens que começam com `!` para o número cadastrado:
 - `!resumo da semana` - Resumo das anotações da semana
 - `!encontrar projeto X` - Busca por projeto específico
 
-### Troubleshooting
-
-#### Bot não autentica
-- Verifique se o arquivo de sessão foi copiado corretamente
-- Tente fazer login local novamente
-- Verifique se o WhatsApp Web não está conectado em outro dispositivo
-
-#### Erro de conexão com pipeline
-- Verifique se o serviço `python_pipeline` está rodando:
-  ```bash
-  docker compose ps python_pipeline
-  ```
-- Teste o endpoint diretamente:
-  ```bash
-  curl "http://localhost:8000/query?text=teste"
-  ```
-
-#### Container wa_bot não inicia
-- Verifique os logs:
-  ```bash
-  docker compose logs wa_bot
-  ```
-- Reconstrua a imagem:
-  ```bash
-  docker compose build wa_bot
-  ```
-
 ### Comandos Úteis
 
 ```bash
-# Parar apenas o bot
-docker compose stop wa_bot
+# Reiniciar serviços
+docker-compose restart wa_bot
+docker-compose restart web_server
 
-# Reiniciar o bot
-docker compose restart wa_bot
+# Parar tudo
+docker-compose down
 
-# Ver logs em tempo real
-docker compose logs -f wa_bot
+# Reconstruir e reiniciar
+docker-compose build && docker-compose up -d
 
-# Executar localmente para debug
-cd wa_bot
-PIPELINE_URL=http://localhost:8000 node index.js
+# Backup de dados
+tar -czf backup-$(date +%Y%m%d).tar.gz vault/ .env/
+
+# Ver estatísticas
+curl http://localhost:8000/stats
 ```
+
+### Troubleshooting
+
+#### Bot não autentica
+- Verifique logs: `docker-compose logs wa_bot`
+- QR code aparece nos logs na primeira execução
+- Certifique-se que WhatsApp Web não está conectado em outro lugar
+
+#### API não responde
+- Verifique: `curl http://localhost:8000/health`
+- Ver logs: `docker-compose logs web_server`
+- Verificar se ChromaDB tem dados indexados
+
+#### Pipeline não executa
+- Ver logs do scheduler: `docker-compose logs pipeline_scheduler`
+- Verificar horário configurado (23:45 por padrão)
+- Testar execução manual no container
+
+#### Containers não iniciam
+- Verificar Docker: `docker --version`
+- Verificar compose: `docker-compose --version`
+- Reconstruir: `docker-compose build --no-cache`
 
 ### Segurança
 

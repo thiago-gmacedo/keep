@@ -42,6 +42,28 @@ Pipeline que extrai imagens do Google Keep, executa OCR com GPT‑4 Vision, estr
 
 ## ⚡ Instalação Rápida
 
+### 🐳 **Docker (Recomendado)**
+
+```bash
+# 1. Clone o repositório
+git clone https://github.com/thiago-gmacedo/ocr-keep-obsidian.git
+cd keep
+git checkout feat/wa-bot
+
+# 2. Configure credenciais
+mkdir -p .env
+cp CONFIG.md .env/
+nano .env/config  # Edite com suas chaves
+
+# 3. Deploy completo
+./deploy.sh
+
+# 4. Configure WhatsApp (primeira vez)
+docker-compose logs -f wa_bot  # Escaneie QR code que aparece
+```
+
+### 🔧 **Manual (Alternativo)**
+
 ```bash
 # Clone o repositório
 git clone https://github.com/thiago-gmacedo/ocr-keep-obsidian.git
@@ -84,13 +106,17 @@ chmod +x setup_check.sh run_loop.sh
 
 | Comando | Descrição | Exemplo |
 |---------|-----------|---------|
-| `python -m src.main` | Executa pipeline completo | Processa notas de hoje |
-| `python -m src.main "Label"` | Filtra por label específica | `python -m src.main "Anotacoes"` |
-| `python scripts/query_interface.py` | Interface de busca ChromaDB | Consulta interativa |
-| `python clear_data.py` | **Limpar todos os dados** | Remove ChromaDB, Obsidian e logs |
-| `./run_loop.sh` | Execução agendada | Roda em horários configurados |
-| `./setup_check.sh` | Diagnóstico rápido | Verificação do sistema |
-| `tail -f logs/pipeline.log` | Acompanhar logs | Monitoramento em tempo real |
+| `./deploy.sh` | **Deploy completo via Docker** | Inicia todos os serviços |
+| `docker-compose up -d` | Iniciar containers | Todos os serviços em background |
+| `docker-compose logs -f wa_bot` | Ver logs do WhatsApp Bot | Monitoramento em tempo real |
+| `curl http://localhost:8000/health` | Testar API | Verificação rápida |
+| `python -m src.main "Label"` | Execução manual (container) | `docker exec container python -m src.main` |
+| `docker-compose down` | Parar todos os serviços | Shutdown completo |
+
+### 📱 **NOVO: Bot WhatsApp**
+- Envie `!listar tarefas` no WhatsApp
+- Funciona 24/7 via Docker
+- Login único via QR code
 
 ## 💻 Uso Básico
 
