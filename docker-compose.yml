@@ -1,16 +1,17 @@
 version: '3.8'
 
 services:
-  python_pipeline:
+  # Servidor Web API (para WhatsApp bot)
+  web_server:
     build: 
       context: .
       dockerfile: Dockerfile.python
-    container_name: keep-python-pipeline
+    container_name: keep-web-server
     ports:
       - "8000:8000"
     volumes:
-      - ./chroma_db:/app/chroma_db
-      - ./obsidian_notes:/app/obsidian_notes
+      - ./vault/chroma_db:/app/chroma_db
+      - ./vault/obsidian:/app/obsidian_notes
       - ./logs:/app/logs
       - ./.env:/app/.env
     environment:
@@ -20,15 +21,35 @@ services:
     restart: unless-stopped
     command: python src/web_server.py
 
+  # Pipeline Principal (substitui run_loop.sh)
+  pipeline_scheduler:
+    build: 
+      context: .
+      dockerfile: Dockerfile.python
+    container_name: keep-pipeline-scheduler
+    volumes:
+      - ./vault/chroma_db:/app/chroma_db
+      - ./vault/obsidian:/app/obsidian_notes
+      - ./images:/app/images
+      - ./logs:/app/logs
+      - ./.env:/app/.env
+    environment:
+      - PYTHONPATH=/app
+      - CHROMA_DB_PATH=/app/chroma_db
+      - OBSIDIAN_PATH=/app/obsidian_notes
+    restart: unless-stopped
+    command: python src/scheduler.py
+
+  # Bot WhatsApp
   wa_bot:
     build: ./wa_bot
     container_name: keep-whatsapp-bot
     depends_on:
-      - python_pipeline
+      - web_server
     volumes:
       - ./wa_bot/sessions:/app/wa_bot/sessions
     environment:
-      - PIPELINE_URL=http://python_pipeline:8000
+      - PIPELINE_URL=http://web_server:8000
     restart: unless-stopped
     stdin_open: true
     tty: true
