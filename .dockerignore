@@ -1,0 +1,46 @@
+# Arquivos de desenvolvimento
+.git/
+.gitignore
+*.md
+LICENSE
+
+# Ambientes virtuais Python
+venv/
+env/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Dados locais (serão montados como volumes)
+images/
+logs/
+chroma_db/
+obsidian_notes/
+vault/
+
+# Arquivos de controle
+.processed_notes.json
+.indexed_notes.json
+
+# Arquivos temporários
+*.log
+*.tmp
+.DS_Store
+Thumbs.db
+
+# Scripts locais
+run_loop.sh
+setup_check.sh
+check_status.sh
+start_keep.sh
+clear_data.py
+
+# Diretórios de teste
+archive/
+test_db/
+demo_chroma_db/
+
+# Sessões do WhatsApp (será montado como volume)
+wa_bot/sessions/
+wa_bot/node_modules/
