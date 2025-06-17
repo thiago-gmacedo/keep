@@ -107,10 +107,7 @@ class ChatRAG:
                 print("⚠️ Aviso: Nenhuma nota indexada encontrada no ChromaDB")
                 print("Execute o pipeline principal primeiro para indexar suas notas")
                 print("Comando: python -m src.main")
-                
-                choice = input("\nDeseja continuar mesmo assim? [s/N]: ")
-                if choice.lower() != 's':
-                    sys.exit("Operação cancelada pelo usuário.")
+                print("🔄 Continuando sem notas indexadas (modo servidor)...")
             else:
                 print(f"✅ ChromaDB carregado: {total_notes} notas indexadas")
                 

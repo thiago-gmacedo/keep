@@ -47,12 +47,15 @@ services:
     depends_on:
       - web_server
     volumes:
-      - ./wa_bot/sessions:/app/wa_bot/sessions
+      - wa_bot_sessions:/app/wa_bot/sessions
     environment:
       - PIPELINE_URL=http://web_server:8000
     restart: unless-stopped
     stdin_open: true
     tty: true
+
+volumes:
+  wa_bot_sessions:
 
 networks:
   default:

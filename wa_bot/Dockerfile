@@ -36,13 +36,16 @@ RUN npm install --production
 # Copiar código da aplicação
 COPY . .
 
-# Criar diretório de sessões e ajustar permissões
-RUN mkdir -p sessions && \
-    chown -R 1001:1001 sessions
+# Tornar script de start executável
+RUN chmod +x start.sh
 
 # Criar usuário não-root para segurança
 RUN groupadd -g 1001 appgroup && \
-    useradd -r -u 1001 -g appgroup appuser && \
+    useradd -r -u 1001 -g appgroup appuser
+
+# Criar diretório de sessões e ajustar permissões APÓS criar o usuário
+RUN mkdir -p sessions && \
+    chmod 755 sessions && \
     chown -R appuser:appgroup /app
 
 USER appuser
@@ -51,4 +54,4 @@ USER appuser
 EXPOSE 3000
 
 # Comando para iniciar o bot
-CMD ["npm", "start"]
+CMD ["./start.sh"]
