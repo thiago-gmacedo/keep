@@ -9,8 +9,19 @@ import time
 import subprocess
 import logging
 import sys
+import signal
 from datetime import datetime
 from pathlib import Path
+
+# Variável global para controle de parada
+shutdown_flag = False
+
+def signal_handler(signum, frame):
+    """Handler para sinais de parada (SIGTERM, SIGINT)"""
+    global shutdown_flag
+    signal_name = signal.Signals(signum).name
+    logger.info(f"🛑 Recebido sinal {signal_name}. Parando scheduler...")
+    shutdown_flag = True
 
 # Configurar logging
 logging.basicConfig(
@@ -67,6 +78,10 @@ def next_execution_time():
 
 def main():
     """Função principal do scheduler"""
+    # Configurar handlers para sinais
+    signal.signal(signal.SIGTERM, signal_handler)
+    signal.signal(signal.SIGINT, signal_handler)
+    
     log_message("🔄 Iniciando scheduler do pipeline Keep")
     log_message("⏰ Horários programados: 23:45 (diariamente)")
     log_message(f"🔄 Próxima execução: {next_execution_time()}")
@@ -75,9 +90,10 @@ def main():
     schedule.every().day.at("23:45").do(run_pipeline)
     
     # Manter o scheduler rodando
-    while True:
+    while not shutdown_flag:
         try:
             schedule.run_pending()
+            log_message("🔄 Verificando agendamentos pendentes...")
             time.sleep(60)  # Verificar a cada minuto
             
         except KeyboardInterrupt:
@@ -86,6 +102,8 @@ def main():
         except Exception as e:
             log_message(f"❌ Erro no scheduler: {e}")
             time.sleep(300)  # Aguardar 5 minutos antes de tentar novamente
+    
+    log_message("✅ Scheduler finalizado graciosamente")
 
 if __name__ == "__main__":
     main()
