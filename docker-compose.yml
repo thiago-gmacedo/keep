@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # Servidor Web API (para WhatsApp bot)
   web_server:
@@ -10,14 +8,12 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./vault/chroma_db:/app/chroma_db
-      - ./vault/obsidian:/app/obsidian_notes
+      - ./vault/chroma_db:/app/vault/chroma_db
+      - ./vault/obsidian:/app/vault/obsidian
       - ./logs:/app/logs
       - ./.env:/app/.env
     environment:
       - PYTHONPATH=/app
-      - CHROMA_DB_PATH=/app/chroma_db
-      - OBSIDIAN_PATH=/app/obsidian_notes
     restart: unless-stopped
     command: python src/web_server.py
 
@@ -28,15 +24,13 @@ services:
       dockerfile: Dockerfile.python
     container_name: keep-pipeline-scheduler
     volumes:
-      - ./vault/chroma_db:/app/chroma_db
-      - ./vault/obsidian:/app/obsidian_notes
+      - ./vault/chroma_db:/app/vault/chroma_db
+      - ./vault/obsidian:/app/vault/obsidian
       - ./images:/app/images
       - ./logs:/app/logs
       - ./.env:/app/.env
     environment:
       - PYTHONPATH=/app
-      - CHROMA_DB_PATH=/app/chroma_db
-      - OBSIDIAN_PATH=/app/obsidian_notes
     restart: unless-stopped
     command: python src/scheduler.py
 
