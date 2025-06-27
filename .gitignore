@@ -14,12 +14,14 @@ env/
 
 # Diretórios de dados processados
 images/
-obsidian_notes/**/*.md
 vault/
 
 # ChromaDB - dados locais
 chroma_db/
 */chroma_db/
+
+# Dados antigos do Obsidian (removido)
+# obsidian_notes/**/*.md
 
 # Arquivos de controle
 .processed_notes.json

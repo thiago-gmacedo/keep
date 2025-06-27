@@ -105,7 +105,6 @@ O ChromaIndexer complementa o fluxo existente:
 
 1. OCR de imagens (`ocr_extractor.py`)
 2. Geração de JSONs estruturados
-3. Conversão para notas Obsidian (`obsidian_writer.py`)
-4. **Indexação para busca semântica** (`chroma_indexer.py`)
+3. **Indexação para busca semântica** (`chroma_indexer.py`)
 
-Isso permite que você não apenas armazene suas notas, mas também as recupere de forma inteligente usando linguagem natural.
+Isso permite que você não apenas armazene suas notas, mas também as recupere de forma inteligente usando linguagem natural através de busca semântica.

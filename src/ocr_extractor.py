@@ -40,43 +40,6 @@ PROCESSED_NOTES_FILE = Path(__file__).parent.parent / ".processed_notes.json"  #
 ENABLE_CHROMA_INDEXING = True  # Por padrão, ativar indexação
 
 
-def convert_json_to_obsidian(json_data, output_folder="obsidian_notes"):
-    """
-    Converte dados JSON para arquivo Markdown do Obsidian
-    
-    Args:
-        json_data (dict): Dados JSON estruturados
-        output_folder (str): Diretório de saída (padrão: obsidian_notes)
-    
-    Returns:
-        bool: True se conversão foi bem-sucedida, False caso contrário
-    """
-    try:
-        # Importar dinamicamente para evitar problemas de importação circular
-        import importlib.util
-        
-        # Caminho para o módulo obsidian_writer (agora na mesma pasta)
-        obsidian_writer_path = Path(__file__).parent / "obsidian_writer.py"
-        
-        # Carregar o módulo dinamicamente
-        spec = importlib.util.spec_from_file_location("obsidian_writer", obsidian_writer_path)
-        obsidian_writer = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(obsidian_writer)
-        
-        # Validar estrutura do JSON
-        if not obsidian_writer.validate_json_structure(json_data):
-            print("⚠️ Estrutura JSON inválida para conversão Obsidian")
-            return False
-        
-        # Converter para Obsidian
-        obsidian_writer.json_to_obsidian(json_data, output_folder)
-        return True
-        
-    except Exception as e:
-        print(f"⚠️ Erro ao converter para Obsidian: {e}")
-        return False
-
-
 def encode_image_to_base64(path):
     """Converte uma imagem para base64"""
     try:
@@ -170,13 +133,6 @@ def process_single_image(img_path):
             with open(out_file, "w", encoding="utf-8") as f:
                 json.dump(json_data, f, indent=2, ensure_ascii=False)
             print(f"✅ JSON estruturado salvo em {out_file}")
-            
-            # Automaticamente converter para Obsidian
-            print("🔄 Convertendo automaticamente para Obsidian...")
-            if convert_json_to_obsidian(json_data):
-                print("✅ Arquivo Obsidian gerado com sucesso!")
-            else:
-                print("⚠️ Falha na conversão para Obsidian")
             
             # Indexar no ChromaDB para busca semântica
             if CHROMA_AVAILABLE and ENABLE_CHROMA_INDEXING:
@@ -565,13 +521,6 @@ def process_keep_notes(label_name):
                             with open(out_file, "w", encoding="utf-8") as f:
                                 json.dump(json_data, f, indent=2, ensure_ascii=False)
                             print(f"✅ JSON estruturado salvo em: {out_file}")
-                            
-                            # Automaticamente converter para Obsidian
-                            print("🔄 Convertendo automaticamente para Obsidian...")
-                            if convert_json_to_obsidian(json_data):
-                                print("✅ Arquivo Obsidian gerado com sucesso!")
-                            else:
-                                print("⚠️ Falha na conversão para Obsidian")
                             
                             # Indexar no ChromaDB para busca semântica
                             if CHROMA_AVAILABLE and ENABLE_CHROMA_INDEXING:

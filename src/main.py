@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-OCR Keep → Obsidian + Vector DB v1.0.0
+Google Keep OCR Pipeline v2.0.0
 Main Pipeline - Centralizador de todo o fluxo de processamento de notas manuscritas
 
 Este módulo executa o pipeline completo:
@@ -8,13 +8,12 @@ Este módulo executa o pipeline completo:
 2. Busca novas imagens (não processadas) 
 3. Executa OCR
 4. Estrutura com LLM
-5. Gera arquivos .md no padrão Obsidian
-6. Indexa no ChromaDB
-7. Move imagens processadas
+5. Indexa no ChromaDB
+6. Move imagens processadas
 
-Autor: Thiago Macedom
-Data: 29/05/2025
-Versão: 1.0.0
+Autor: Thiago Macedo
+Data: 27/06/2025
+Versão: 2.0.0
 """
 
 import sys
@@ -69,9 +68,8 @@ try:
         encode_image_to_base64
     )
     
-    # Importar módulos de parsing e exportação
+    # Importar módulos de parsing
     from src.parser import parse_ocr_text
-    from src.obsidian_exporter import convert_to_md
     from src.chroma_indexer import index_note_in_chroma
     
     logger.info("✅ Todos os módulos importados com sucesso")
@@ -82,14 +80,13 @@ except ImportError as e:
     sys.exit(1)
 
 # Informações de versão
-__version__ = "1.0.0"
-__author__ = "Thiago Macedom"
-__date__ = "29/05/2025"
+__version__ = "2.0.0"
+__author__ = "Thiago Macedo"
+__date__ = "27/06/2025"
 
 # Configurações iniciais (serão atualizadas por load_config_paths)
 IMAGES_DIR = ROOT_DIR / "images"
 PROCESSED_DIR = IMAGES_DIR / "processed"
-OBSIDIAN_DIR = ROOT_DIR / "obsidian_notes"  # Padrão, será atualizado
 CHROMA_DB_DIR = ROOT_DIR / "chroma_db"  # Padrão, será atualizado
 PROCESSED_NOTES_FILE = ROOT_DIR / ".processed_notes.json"
 
@@ -99,24 +96,14 @@ def load_config_paths():
     Carrega caminhos personalizados das variáveis de ambiente
     
     Returns:
-        tuple: (obsidian_path, chroma_db_path)
+        Path: chroma_db_path
     """
-    global OBSIDIAN_DIR, CHROMA_DB_DIR
+    global CHROMA_DB_DIR
     
     config = load_keep_credentials()
     
-    # Carregar caminhos personalizados ou usar padrões
-    obs_path = config.get('OBS_PATH') or os.environ.get('OBS_PATH')
+    # Carregar caminho personalizado ou usar padrão
     chroma_path = config.get('CHROMA_DB_PATH') or os.environ.get('CHROMA_DB_PATH')
-    
-    if obs_path:
-        OBSIDIAN_DIR = Path(obs_path)
-        if not OBSIDIAN_DIR.is_absolute():
-            OBSIDIAN_DIR = ROOT_DIR / obs_path
-        print(f"📁 Usando caminho personalizado para Obsidian: {OBSIDIAN_DIR}")
-    else:
-        OBSIDIAN_DIR = ROOT_DIR / "obsidian_notes"
-        print(f"📁 Usando caminho padrão para Obsidian: {OBSIDIAN_DIR}")
     
     if chroma_path:
         CHROMA_DB_DIR = Path(chroma_path)
@@ -127,7 +114,7 @@ def load_config_paths():
         CHROMA_DB_DIR = ROOT_DIR / "chroma_db"
         print(f"🧠 Usando caminho padrão para ChromaDB: {CHROMA_DB_DIR}")
     
-    return OBSIDIAN_DIR, CHROMA_DB_DIR
+    return CHROMA_DB_DIR
 
 
 # Criar diretórios necessários
@@ -423,36 +410,6 @@ def save_text_data(text: str, image_path: Path) -> Path:
         raise
 
 
-def generate_obsidian_note(json_data: Dict[str, Any]) -> bool:
-    """
-    Gera arquivo Markdown para Obsidian usando obsidian_exporter
-    
-    Args:
-        json_data: Dados estruturados
-    
-    Returns:
-        True se geração foi bem-sucedida
-    """
-    logger.info("📚 Gerando nota Obsidian...")
-    
-    try:
-        # Usar o novo módulo de exportação Obsidian
-        success = convert_to_md(json_data, str(OBSIDIAN_DIR))
-        
-        if success:
-            logger.info("✅ Nota Obsidian gerada com sucesso")
-            return True
-        else:
-            logger.warning("⚠️ Falha na geração da nota Obsidian")
-            return False
-        
-    except Exception as e:
-        logger.error(f"❌ Erro ao gerar nota Obsidian: {e}")
-        return False
-        print(f"❌ Erro ao gerar nota Obsidian: {e}")
-        return False
-
-
 def index_in_chromadb(json_data: Dict[str, Any]) -> bool:
     """
     Indexa dados no ChromaDB para busca semântica
@@ -518,7 +475,6 @@ def process_single_image(image_path: Path, note_id: str = None) -> Dict[str, boo
     results = {
         'ocr': False,
         'json_parsing': False,
-        'obsidian': False,
         'chromadb': False,
         'move_image': False
     }
@@ -536,11 +492,7 @@ def process_single_image(image_path: Path, note_id: str = None) -> Dict[str, boo
             save_json_data(json_data, image_path)
             results['json_parsing'] = True
             
-            # Etapa 3: Gerar nota Obsidian
-            if generate_obsidian_note(json_data):
-                results['obsidian'] = True
-            
-            # Etapa 4: Indexar no ChromaDB
+            # Etapa 3: Indexar no ChromaDB
             if index_in_chromadb(json_data):
                 results['chromadb'] = True
         else:
@@ -548,7 +500,7 @@ def process_single_image(image_path: Path, note_id: str = None) -> Dict[str, boo
             save_text_data(extracted_text, image_path)
             print("💾 Conteúdo salvo como texto puro")
         
-        # Etapa 5: Mover imagem processada
+        # Etapa 4: Mover imagem processada
         if move_processed_image(image_path):
             results['move_image'] = True
         
@@ -568,7 +520,7 @@ def run_pipeline(label_name: Optional[str] = None):
         label_name: Nome da label para filtrar notas (opcional)
     """
     print(f"\n{'='*80}")
-    print(f"🚀 OCR KEEP → OBSIDIAN + VECTOR DB v{__version__}")
+    print(f"🚀 GOOGLE KEEP OCR PIPELINE v{__version__}")
     print(f"📝 PIPELINE DE PROCESSAMENTO DE NOTAS MANUSCRITAS")
     print(f"👤 Autor: {__author__} | 📅 Data: {__date__}")
     print(f"{'='*80}")
@@ -578,10 +530,9 @@ def run_pipeline(label_name: Optional[str] = None):
     try:
         # Etapa 1: Carregar configurações de caminhos personalizados
         print("\n⚙️ Carregando configurações...")
-        obsidian_path, chroma_path = load_config_paths()
+        chroma_path = load_config_paths()
         
-        # Criar diretórios personalizados
-        obsidian_path.mkdir(parents=True, exist_ok=True)
+        # Criar diretório personalizado
         chroma_path.mkdir(parents=True, exist_ok=True)
         
         # Etapa 2: Configurar APIs
@@ -661,7 +612,6 @@ def run_pipeline(label_name: Optional[str] = None):
         print(f"   🖼️ Imagens processadas: {processed_images}/{total_images}")
         print(f"📁 Diretórios:")
         print(f"   🖼️ Imagens processadas: {PROCESSED_DIR}")
-        print(f"   📚 Notas Obsidian: {OBSIDIAN_DIR}")
         print(f"   🧠 ChromaDB: {CHROMA_DB_DIR}")
         print(f"{'='*80}")
         

@@ -9,7 +9,6 @@ services:
       - "8000:8000"
     volumes:
       - ./vault/chroma_db:/app/vault/chroma_db
-      - ./vault/obsidian:/app/vault/obsidian
       - ./logs:/app/logs
       - ./.env:/app/.env
     environment:
@@ -24,8 +23,7 @@ services:
       dockerfile: Dockerfile.python
     container_name: keep-pipeline-scheduler
     volumes:
-      - ./vault/chroma_db:/app/vault/chroma_db
-      - ./vault/obsidian:/app/vault/obsidian
+      - ./chroma_db:/app/chroma_db
       - ./images:/app/images
       - ./logs:/app/logs
       - ./.env:/app/.env

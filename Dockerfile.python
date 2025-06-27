@@ -20,7 +20,7 @@ RUN pip install fastapi uvicorn
 COPY . .
 
 # Criar diretórios necessários
-RUN mkdir -p chroma_db logs obsidian_notes images/processed
+RUN mkdir -p chroma_db logs images/processed
 
 # Expor porta do servidor web
 EXPOSE 8000

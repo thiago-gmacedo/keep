@@ -1,4 +1,4 @@
-# OCR Keep → Obsidian + Vector DB v1.0.0
+# Google Keep OCR Pipeline v2.0.0
 # Dependências principais
 
 # APIs e Conectividade

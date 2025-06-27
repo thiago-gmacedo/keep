@@ -2,9 +2,8 @@
 """
 Clear Data Script - Limpa todos os dados gerados pelo sistema
 
-Este script remove todos os dados gerados pelo sistema OCR Keep, incluindo:
+Este script remove todos os dados gerados pelo sistema Google Keep OCR Pipeline, incluindo:
 - ChromaDB (banco vetorial)
-- Arquivos Obsidian (.md)
 - Imagens processadas
 - Logs do sistema
 - Histórico de notas processadas
@@ -12,7 +11,7 @@ Este script remove todos os dados gerados pelo sistema OCR Keep, incluindo:
 Respeita os caminhos configurados no .env/config
 
 Autor: Thiago Macedo
-Data: 02/06/2025
+Data: 27/06/2025
 """
 
 import sys
@@ -37,24 +36,17 @@ def load_config_paths() -> Dict[str, Path]:
     try:
         config = load_keep_credentials()
         
-        # Caminhos configuráveis
-        obs_path = config.get('OBS_PATH', str(ROOT_DIR / 'obsidian_notes'))
+        # Caminho configurável
         chroma_path = config.get('CHROMA_DB_PATH', str(ROOT_DIR / 'chroma_db'))
         
         # Converter para Path absoluto
-        if not Path(obs_path).is_absolute():
-            obs_path = ROOT_DIR / obs_path
-        else:
-            obs_path = Path(obs_path)
-            
         if not Path(chroma_path).is_absolute():
             chroma_path = ROOT_DIR / chroma_path
         else:
             chroma_path = Path(chroma_path)
         
-        # Caminhos fixos
+        # Caminhos fixos (removido obsidian)
         paths = {
-            'obsidian': obs_path,
             'chroma_db': chroma_path,
             'images_processed': ROOT_DIR / 'images' / 'processed',
             'logs': ROOT_DIR / 'logs',
@@ -69,9 +61,8 @@ def load_config_paths() -> Dict[str, Path]:
         print(f"❌ Erro ao carregar configuração: {e}")
         print("Usando caminhos padrão...")
         
-        # Caminhos padrão em caso de erro
+        # Caminhos padrão em caso de erro (removido obsidian)
         return {
-            'obsidian': ROOT_DIR / 'obsidian_notes',
             'chroma_db': ROOT_DIR / 'chroma_db',
             'images_processed': ROOT_DIR / 'images' / 'processed',
             'logs': ROOT_DIR / 'logs',
@@ -138,8 +129,7 @@ def confirm_action(paths: Dict[str, Path]) -> bool:
     print("   Todos os dados listados acima serão PERMANENTEMENTE removidos.")
     print("   Isso inclui:")
     print("   • 🧠 Banco vetorial ChromaDB (busca semântica)")
-    print("   • 📝 Arquivos Obsidian gerados")
-    print("   • 📷 Imagens processadas")
+    print("   •  Imagens processadas")
     print("   • 📊 Logs do sistema")
     print("   • 🗃️ Histórico de processamento")
     
@@ -173,7 +163,7 @@ def main():
     total_count = len(paths)
     
     # Remover diretórios
-    directories = ['chroma_db', 'obsidian', 'images_processed', 'logs']
+    directories = ['chroma_db', 'images_processed', 'logs']
     for dir_name in directories:
         if dir_name in paths:
             if clear_directory(paths[dir_name], dir_name):
@@ -204,20 +194,18 @@ def main():
 
 def show_help():
     """Mostra ajuda do script"""
-    print("🧹 SCRIPT DE LIMPEZA - OCR Keep")
+    print("🧹 SCRIPT DE LIMPEZA - Google Keep OCR Pipeline")
     print("=" * 40)
     print("\nUSO:")
     print("  python clear_data.py          # Execução interativa")
     print("  python clear_data.py --help   # Esta ajuda")
     print("\nO QUE É REMOVIDO:")
     print("  📁 ChromaDB        - Banco vetorial para busca")
-    print("  📁 Obsidian        - Arquivos .md gerados")
     print("  📁 Logs            - Histórico de execução")
     print("  📁 Processadas     - Imagens já processadas")
     print("  📄 Históricos      - Arquivos de estado")
     print("\nCONFIGURAÇÃO:")
     print("  Os caminhos respeitam as configurações em .env/config")
-    print("  - OBS_PATH: diretório Obsidian")
     print("  - CHROMA_DB_PATH: diretório ChromaDB")
 
 if __name__ == "__main__":
