@@ -27,7 +27,7 @@ const client = new Client({
         dataPath: "./sessions"
     }),
     puppeteer: {
-        headless: true, // Alterado para true para teste no servidor
+        headless: true,
         args: [
             '--no-sandbox',
             '--disable-setuid-sandbox',
@@ -37,10 +37,10 @@ const client = new Client({
             '--no-zygote',
             '--single-process',
             '--disable-gpu',
-            '--disable-crashpad', // Desativar Crashpad
-            '--disable-background-networking',
-            '--disable-default-apps'
-        ]
+            '--disable-features=site-per-process',
+            '--disable-extensions'
+        ],
+        executablePath: '/usr/bin/chromium-browser'  // Especificar caminho
     }
 });
 
