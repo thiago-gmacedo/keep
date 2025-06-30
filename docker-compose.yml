@@ -29,6 +29,7 @@ services:
       - ./.env:/app/.env
     environment:
       - PYTHONPATH=/app
+      - TZ=America/Sao_Paulo  # Adicione esta linha com seu timezone
     restart: unless-stopped
     command: python src/scheduler.py
 
