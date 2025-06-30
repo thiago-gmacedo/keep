@@ -38,13 +38,13 @@ const client = new Client({
             '--single-process',
             '--disable-gpu'
         ],
-        // A imagem puppeteer/puppeteer já tem o caminho do Chromium configurado
-        // Não precisamos especificar o executablePath
+        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/google-chrome-stable'
     }
 });
 
 // Adicionar logs detalhados para depuração
 console.log('🔄 Puppeteer configurado com configuração otimizada para Docker.');
+console.log('📁 Caminho do Chrome:', process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/google-chrome-stable');
 
 // Função para consultar o pipeline
 async function queryPipeline(text) {
