@@ -21,8 +21,11 @@ RUN apt-get update && apt-get install -y \
     --no-install-recommends && \
     rm -rf /var/lib/apt/lists/*
 
-# Definir variável de ambiente para Chromium
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+# Verificar o caminho correto do Chromium
+RUN which chromium || which chromium-browser || echo "Chromium não encontrado!"
+
+# Definir variável de ambiente para Chromium - CAMINHO ATUALIZADO!
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 
 # Criar diretório da aplicação

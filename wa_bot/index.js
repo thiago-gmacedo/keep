@@ -40,13 +40,13 @@ const client = new Client({
             '--disable-features=site-per-process',
             '--disable-extensions'
         ],
-        executablePath: '/usr/bin/chromium-browser'  // Especificar caminho
+        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium'  // Usar variável de ambiente
     }
 });
 
 // Adicionar logs detalhados para depuração
 console.log('🔄 Puppeteer configurado com flags adicionais para desativar Crashpad e otimizar recursos.');
-console.log('📁 Caminho do Chromium:', process.env.PUPPETEER_EXECUTABLE_PATH);
+console.log('📁 Caminho do Chromium:', process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium');
 
 // Função para consultar o pipeline
 async function queryPipeline(text) {

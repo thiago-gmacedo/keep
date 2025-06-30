@@ -44,8 +44,7 @@ services:
     environment:
       - PIPELINE_URL=http://web_server:8000
       - NODE_OPTIONS=--max_old_space_size=512  # Limitar uso de memória
-      - PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
-      - PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+      - PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true  # Pular download do Chromium
     restart: unless-stopped
     stdin_open: true
     tty: true
