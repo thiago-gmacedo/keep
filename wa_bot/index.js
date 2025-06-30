@@ -27,7 +27,7 @@ const client = new Client({
         dataPath: "./sessions"
     }),
     puppeteer: {
-        headless: true,
+        headless: false, // Alterado para false para depuração
         args: [
             '--no-sandbox',
             '--disable-setuid-sandbox',
@@ -40,6 +40,10 @@ const client = new Client({
         ]
     }
 });
+
+// Adicionar logs detalhados para depuração
+console.log('🔄 Puppeteer configurado com headless: false');
+console.log('📁 Caminho do Chromium:', process.env.PUPPETEER_EXECUTABLE_PATH);
 
 // Função para consultar o pipeline
 async function queryPipeline(text) {
