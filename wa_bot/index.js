@@ -27,7 +27,7 @@ const client = new Client({
         dataPath: "./sessions"
     }),
     puppeteer: {
-        headless: false, // Alterado para false para depuração
+        headless: true, // Alterado para true para teste no servidor
         args: [
             '--no-sandbox',
             '--disable-setuid-sandbox',
@@ -36,13 +36,16 @@ const client = new Client({
             '--no-first-run',
             '--no-zygote',
             '--single-process',
-            '--disable-gpu'
+            '--disable-gpu',
+            '--disable-crashpad', // Desativar Crashpad
+            '--disable-background-networking',
+            '--disable-default-apps'
         ]
     }
 });
 
 // Adicionar logs detalhados para depuração
-console.log('🔄 Puppeteer configurado com headless: false');
+console.log('🔄 Puppeteer configurado com flags adicionais para desativar Crashpad e otimizar recursos.');
 console.log('📁 Caminho do Chromium:', process.env.PUPPETEER_EXECUTABLE_PATH);
 
 // Função para consultar o pipeline
