@@ -36,17 +36,15 @@ const client = new Client({
             '--no-first-run',
             '--no-zygote',
             '--single-process',
-            '--disable-gpu',
-            '--disable-features=site-per-process',
-            '--disable-extensions'
+            '--disable-gpu'
         ],
-        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium'  // Usar variável de ambiente
+        // A imagem puppeteer/puppeteer já tem o caminho do Chromium configurado
+        // Não precisamos especificar o executablePath
     }
 });
 
 // Adicionar logs detalhados para depuração
-console.log('🔄 Puppeteer configurado com flags adicionais para desativar Crashpad e otimizar recursos.');
-console.log('📁 Caminho do Chromium:', process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium');
+console.log('🔄 Puppeteer configurado com configuração otimizada para Docker.');
 
 // Função para consultar o pipeline
 async function queryPipeline(text) {

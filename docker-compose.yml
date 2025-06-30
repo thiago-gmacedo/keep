@@ -40,24 +40,18 @@ services:
       - web_server
     volumes:
       - wa_bot_sessions:/app/wa_bot/sessions
-      - ./logs:/app/wa_bot/logs  # Adicione este volume para logs
+      - ./logs:/app/wa_bot/logs
     environment:
       - PIPELINE_URL=http://web_server:8000
-      - NODE_OPTIONS=--max_old_space_size=512  # Limitar uso de memória
-      - PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true  # Pular download do Chromium
+      - NODE_OPTIONS=--max_old_space_size=512
     restart: unless-stopped
     stdin_open: true
     tty: true
     deploy:
       resources:
         limits:
-          memory: 1G        # Limitar a 1GB de RAM
-          cpus: '0.5'       # Limitar a 50% da CPU
-    healthcheck:            # Adicionar healthcheck
-      test: ["CMD", "node", "-e", "console.log('healthcheck')"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+          memory: 1G
+          cpus: '0.5'
 
 volumes:
   wa_bot_sessions:
