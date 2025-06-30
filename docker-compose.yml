@@ -43,15 +43,15 @@ services:
       - ./logs:/app/wa_bot/logs
     environment:
       - PIPELINE_URL=http://web_server:8000
-      - NODE_OPTIONS=--max_old_space_size=512
+      - NODE_OPTIONS=--max_old_space_size=1024
     restart: unless-stopped
     stdin_open: true
     tty: true
     deploy:
       resources:
         limits:
-          memory: 1G
-          cpus: '0.5'
+          memory: 2G
+          cpus: '1.0'
 
 volumes:
   wa_bot_sessions:
